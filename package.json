@@ -1,810 +1,816 @@
 {
-	"name": "karate-runner",
-	"displayName": "Karate Runner",
-	"description": "Open/Run/Debug Karate Tests and Reports by leveraging Codelens, Activity Bar, Debugger and much more.",
-	"icon": "resources/karate.png",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/kirksl/karate-runner"
-	},
-	"version": "1.2.5",
-	"appInsightsId": "a285938d-a115-44ea-be2a-588a243d5f2c",
-	"license": "MIT",
-	"author": {
-		"name": "Kirk Slota"
-	},
-	"publisher": "kirkslota",
-	"sponsor": {
-		"url": "https://github.com/sponsors/kirksl"
-	},
-	"engines": {
-		"vscode": "^1.83.0"
-	},
-	"categories": [
-		"Programming Languages",
-		"Debuggers",
-		"Testing",
-		"Other"
-	],
-	"keywords": [
-		"karatelabs",
-		"karate",
-		"intuit",
-		"rest",
-		"api",
-		"gatling"
-	],
-	"activationEvents": [
-		"onLanguage:karate",
-		"onLanguage:javascript",
-		"onView:karate-reports",
-		"onView:karate-tests"
-	],
-	"main": "./out/extension",
-	"capabilities": {
-		"untrustedWorkspaces": {
-			"supported": true
-		}
-	},
-	"contributes": {
-		"colors": [
-			{
-				"id": "karateRunner.trailingLineBackgroundColor",
-				"description": "Specifies the background color of the line number annotation for Examples",
-				"defaults": {
-					"dark": "#00000000",
-					"light": "#00000000",
-					"highContrast": "#00000000"
-				}
-			},
-			{
-				"id": "karateRunner.trailingLineForegroundColor",
-				"description": "Specifies the foreground color of the line number annotation for Examples",
-				"defaults": {
-					"dark": "#99999959",
-					"light": "#99999959",
-					"highContrast": "#99999999"
-				}
-			}
-		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "karate-runner",
-					"title": "Karate Runner",
-					"icon": "resources/karate-activitybar.svg"
-				}
-			]
-		},
-		"views": {
-			"karate-runner": [
-				{
-					"id": "karate-reports",
-					"name": "Reports",
-					"when": "workbenchState != empty"
-				},
-				{
-					"id": "karate-tests",
-					"name": "Tests",
-					"when": "workbenchState != empty"
-				},
-				{
-					"id": "karate-welcome",
-					"name": "Welcome",
-					"when": "workbenchState == empty"
-				}
-			]
-		},
-		"viewsWelcome": [
-			{
-				"view": "karate-welcome",
-				"contents": "Karate Runner\nIn order to use this extension you must open a folder containing a Karate project or clone from a URL.\n[Open Folder](command:vscode.openFolder)\n[Clone Repository](command:git.clone)\nAdditionally consider leveraging an existing sample project.\n[Karate Sample Projects](https://github.com/karatelabs/karate/tree/master/examples)\n[Karate Runner Sample Project](https://github.com/kirksl/karate-maven-gradle)\nLearn more about [this extension](https://marketplace.visualstudio.com/items?itemName=kirkslota.karate-runner) and [Karate](https://github.com/karatelabs/karate)."
-			}
-		],
-		"commands": [
-			{
-				"command": "karateRunner.paste",
-				"title": "Karate Smart Paste",
-				"enablement": "editorTextFocus && editorLangId == karate"
-			},
-			{
-				"command": "karateRunner.getDebugPort",
-				"title": "Get Debug Port"
-			},
-			{
-				"command": "karateRunner.getDebugFile",
-				"title": "Get File To Debug"
-			},
-			{
-				"command": "karateRunner.getDebugBuildFile",
-				"title": "Get Build File To Debug"
-			},
-			{
-				"command": "karateRunner.reports.open",
-				"title": "Open Build Report"
-			},
-			{
-				"command": "karateRunner.reports.refreshTree",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			},
-			{
-				"command": "karateRunner.reports.displayList",
-				"title": "Display List",
-				"icon": {
-					"light": "resources/light/display-tree.svg",
-					"dark": "resources/dark/display-tree.svg"
-				}
-			},
-			{
-				"command": "karateRunner.reports.displayTree",
-				"title": "Display Tree",
-				"icon": {
-					"light": "resources/light/display-list.svg",
-					"dark": "resources/dark/display-list.svg"
-				}
-			},
-			{
-				"command": "karateRunner.reports.filterTree",
-				"title": "Filter",
-				"icon": {
-					"light": "resources/light/filter.svg",
-					"dark": "resources/dark/filter.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.setEnvironment",
-				"title": "Set Environment",
-				"icon": {
-					"light": "resources/light/vm.svg",
-					"dark": "resources/dark/vm.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.clearResults",
-				"title": "Clear Results",
-				"icon": {
-					"light": "resources/light/clear-all.svg",
-					"dark": "resources/dark/clear-all.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.refreshTree",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.displayList",
-				"title": "Display List",
-				"icon": {
-					"light": "resources/light/display-tag.svg",
-					"dark": "resources/dark/display-tag.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.displayTree",
-				"title": "Display Tree",
-				"icon": {
-					"light": "resources/light/display-list.svg",
-					"dark": "resources/dark/display-list.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.displayTag",
-				"title": "Display Tags",
-				"icon": {
-					"light": "resources/light/display-tree.svg",
-					"dark": "resources/dark/display-tree.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.filterTree",
-				"title": "Filter",
-				"icon": {
-					"light": "resources/light/filter.svg",
-					"dark": "resources/dark/filter.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.openSettings",
-				"title": "Open Settings",
-				"icon": {
-					"light": "resources/light/gear.svg",
-					"dark": "resources/dark/gear.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.open",
-				"title": "Open In Editor",
-				"icon": {
-					"light": "resources/light/open-file.svg",
-					"dark": "resources/dark/open-file.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.run",
-				"title": "Run Test",
-				"icon": {
-					"light": "resources/light/run.svg",
-					"dark": "resources/dark/run.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.runTag",
-				"title": "Run All Tests",
-				"icon": {
-					"light": "resources/light/run-all.svg",
-					"dark": "resources/dark/run-all.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.runAll",
-				"title": "Run All Tests",
-				"icon": {
-					"light": "resources/light/run-all.svg",
-					"dark": "resources/dark/run-all.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.debug",
-				"title": "Debug Test",
-				"icon": {
-					"light": "resources/light/debug-alt-small.svg",
-					"dark": "resources/dark/debug-alt-small.svg"
-				}
-			},
-			{
-				"command": "karateRunner.tests.debugAll",
-				"title": "Debug All Tests",
-				"icon": {
-					"light": "resources/light/debug-alt-small.svg",
-					"dark": "resources/dark/debug-alt-small.svg"
-				}
-			},
-			{
-				"command": "karateRunner.editor.toggleResultsInGutter",
-				"title": "Toggle Results In Gutter"
-			},
-			{
-				"command": "karateRunner.editor.alignDataTables",
-				"title": "Align Data Tables"
-			}
-		],
-		"menus": {
-			"commandPalette": [
-				{
-					"command": "karateRunner.paste",
-					"when": "false"
-				}
-			],
-			"view/title": [
-				{
-					"command": "karateRunner.reports.refreshTree",
-					"when": "view == karate-reports",
-					"group": "navigation@1"
-				},
-				{
-					"command": "karateRunner.reports.displayList",
-					"when": "view == karate-reports && config.karateRunner.reports.activityBarDisplayType =~ /^Tree$|^Deep$/",
-					"group": "navigation@2"
-				},
-				{
-					"command": "karateRunner.reports.displayTree",
-					"when": "view == karate-reports && config.karateRunner.reports.activityBarDisplayType =~ /^List$|^Shallow$/",
-					"group": "navigation@2"
-				},
-				{
-					"command": "karateRunner.reports.filterTree",
-					"when": "view == karate-reports",
-					"group": "navigation@3"
-				},
-				{
-					"command": "karateRunner.tests.setEnvironment",
-					"when": "view == karate-tests",
-					"group": "navigation@1"
-				},
-				{
-					"command": "karateRunner.tests.clearResults",
-					"when": "view == karate-tests",
-					"group": "navigation@2"
-				},
-				{
-					"command": "karateRunner.tests.refreshTree",
-					"when": "view == karate-tests",
-					"group": "navigation@3"
-				},
-				{
-					"command": "karateRunner.tests.displayList",
-					"when": "view == karate-tests && config.karateRunner.tests.activityBarDisplayType == Tag",
-					"group": "navigation@4"
-				},
-				{
-					"command": "karateRunner.tests.displayTree",
-					"when": "view == karate-tests && config.karateRunner.tests.activityBarDisplayType =~ /^List$|^Shallow$/",
-					"group": "navigation@4"
-				},
-				{
-					"command": "karateRunner.tests.displayTag",
-					"when": "view == karate-tests && config.karateRunner.tests.activityBarDisplayType =~ /^Tree$|^Deep$/",
-					"group": "navigation@4"
-				},
-				{
-					"command": "karateRunner.tests.filterTree",
-					"when": "view == karate-tests",
-					"group": "navigation@5"
-				},
-				{
-					"command": "karateRunner.tests.openSettings",
-					"when": "view == karate-tests",
-					"group": "navigation@6"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "karateRunner.tests.runTag",
-					"when": "view == karate-tests && viewItem == testTag",
-					"group": "inline"
-				},
-				{
-					"command": "karateRunner.tests.runAll",
-					"when": "view == karate-tests && viewItem == testDirectory",
-					"group": "inline"
-				},
-				{
-					"command": "karateRunner.tests.runAll",
-					"when": "view == karate-tests && viewItem == testFile",
-					"group": "inline@1"
-				},
-				{
-					"command": "karateRunner.tests.debugAll",
-					"when": "view == karate-tests && viewItem == testFile",
-					"group": "inline@2"
-				},
-				{
-					"command": "karateRunner.tests.open",
-					"when": "view == karate-tests && viewItem == testFile",
-					"group": "inline@3"
-				},
-				{
-					"command": "karateRunner.tests.open",
-					"when": "view == karate-tests && viewItem == testFileIgnored",
-					"group": "inline@1"
-				},
-				{
-					"command": "karateRunner.tests.runAll",
-					"when": "view == karate-tests && viewItem == testFeature",
-					"group": "inline@1"
-				},
-				{
-					"command": "karateRunner.tests.debugAll",
-					"when": "view == karate-tests && viewItem == testFeature",
-					"group": "inline@2"
-				},
-				{
-					"command": "karateRunner.tests.run",
-					"when": "view == karate-tests && viewItem == testScenario",
-					"group": "inline@1"
-				},
-				{
-					"command": "karateRunner.tests.debug",
-					"when": "view == karate-tests && viewItem == testScenario",
-					"group": "inline@2"
-				}
-			],
-			"editor/title": [
-				{
-					"submenu": "KarateRunner.editor.menu",
-					"when": "resourceLangId == karate",
-					"group": "navigation@100"
-				}
-			],
-			"KarateRunner.editor.menu": [
-				{
-					"command": "karateRunner.editor.alignDataTables",
-					"when": "resourceLangId == karate",
-					"group": "navigation@1"
-				},
-				{
-					"command": "karateRunner.tests.setEnvironment",
-					"when": "resourceLangId == karate",
-					"group": "navigation@2"
-				},
-				{
-					"command": "karateRunner.tests.clearResults",
-					"when": "resourceLangId == karate",
-					"group": "navigation@3"
-				},
-				{
-					"command": "karateRunner.tests.openSettings",
-					"when": "resourceLangId == karate",
-					"group": "navigation@4"
-				},
-				{
-					"command": "karateRunner.editor.toggleResultsInGutter",
-					"when": "resourceLangId == karate",
-					"group": "navigation@5"
-				}
-			]
-		},
-		"submenus": [
-			{
-				"id": "KarateRunner.editor.menu",
-				"label": "Editor Settings",
-				"icon": {
-					"dark": "resources/dark/karate-editor.svg",
-					"light": "resources/light/karate-editor.svg"
-				}
-			}
-		],
-		"configuration": {
-			"type": "object",
-			"title": "Karate Runner",
-			"properties": {
-				"karateRunner.core.environment": {
-					"type": "string",
-					"default": "",
-					"description": "Environment to test against.  Karate Runner will use this value to set the 'karate.env' system property.",
-					"scope": "resource"
-				},
-				"karateRunner.karateJar.commandLineArgs": {
-					"type": "string",
-					"default": "java -cp karate.jar com.intuit.karate.Main",
-					"description": "Karate.jar command line.  Karate Runner will handle setting the command line with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios.  Only applies when using Karate.jar.",
-					"scope": "resource"
-				},
-				"karateRunner.karateJS.commandLineArgs": {
-					"type": "string",
-					"default": "npm run test",
-					"description": "Karate JS command line.  Karate Runner will handle setting the command line with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios.  Only applies when using Karate JS (i.e. A package.json and your choice of NPM, Yarn, etc.)",
-					"scope": "resource"
-				},
-				"karateRunner.karateCli.overrideKarateRunner": {
-					"type": "boolean",
-					"default": false,
-					"description": "Override Karate Runner utilizing the new Karate Cli.  See 'Karate Cli' section within Extension Details in the Marketplace for further information.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.karateCli.commandLineArgs": {
-					"type": "string",
-					"default": "",
-					"description": "Karate Cli command line.  Karate Cli specific arguments are specified here as defined at https://github.com/karatelabs/karate/wiki/Debug-Server#karate-options.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.karateRunner.commandLineArgs": {
-					"type": "string",
-					"default": "",
-					"description": "Karate Runner command line.  Arguments accepted by Maven or Gradle are specified here such as JVM args.  Karate Runner will handle build commands, setting the command line with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.karateRunner.default": {
-					"type": "string",
-					"default": "",
-					"description": "Default Karate Runner to use for running Karate tests.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.karateRunner.promptToSpecify": {
-					"type": "boolean",
-					"default": true,
-					"description": "Prompt to specify Karate Runner before running Karate tests.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.buildDirectory.cleanBeforeEachRun": {
-					"type": "boolean",
-					"default": true,
-					"description": "Clean build directory before running Karate tests.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.buildSystem.useWrapper": {
-					"type": "boolean",
-					"default": false,
-					"description": "Use build system wrapper.  Only applies when using Maven or Gradle.",
-					"scope": "resource"
-				},
-				"karateRunner.reports.openAfterEachRun": {
-					"type": "boolean",
-					"default": false,
-					"description": "Open reports in default program after running Karate tests.",
-					"scope": "resource"
-				},
-				"karateRunner.reports.toTargetByGlob": {
-					"type": "string",
-					"default": "**/{karate-reports/karate-*,**/gatling/*/index,lcov-report/index,jacoco/test/html/index,jacoco/index,cucumber-html-reports/overview-features,surefire-reports/timeline}.htm*",
-					"description": "Display reports targeted by glob pattern within Activity Bar.",
-					"scope": "resource"
-				},
-				"karateRunner.reports.activityBarDisplayType": {
-					"type": "string",
-					"default": "List",
-					"enum": [
-						"List",
-						"Tree"
-					],
-					"description": "Display reports as a list (List) or natural directory structure (Tree) within Activity Bar.",
-					"scope": "resource"
-				},
-				"karateRunner.debugger.serverPort": {
-					"type": "number",
-					"default": -1,
-					"description": "Default port number for connecting with debug server.  Set to -1 to use dynamic port number.",
-					"scope": "resource"
-				},
-				"karateRunner.debugger.serverPortTimeout": {
-					"type": "number",
-					"default": 60,
-					"description": "Default time (seconds) to wait for debug server to start.",
-					"scope": "resource"
-				},
-				"karateRunner.statusBar.colorOnFailureThreshold": {
-					"type": "string",
-					"default": "100%",
-					"enum": [
-						"10%",
-						"20%",
-						"30%",
-						"40%",
-						"50%",
-						"60%",
-						"70%",
-						"80%",
-						"90%",
-						"100%"
-					],
-					"description": "Color status bar background red when reaching failure threshold.",
-					"scope": "resource"
-				},
-				"karateRunner.executionHistory.limit": {
-					"type": "number",
-					"default": 50,
-					"description": "Maximum number of executions to store and re-execute from Karate status bar.",
-					"scope": "resource"
-				},
-				"karateRunner.tests.toTargetByGlob": {
-					"type": "string",
-					"default": "**/src/test/**/*.feature",
-					"description": "Display Karate tests targeted by glob pattern within Activity Bar.",
-					"scope": "resource"
-				},
-				"karateRunner.tests.toTargetByTag": {
-					"type": "string",
-					"default": "",
-					"description": "Display Karate tests targeted by tags within Activity Bar.",
-					"scope": "resource"
-				},
-				"karateRunner.tests.hideIgnored": {
-					"type": "boolean",
-					"default": false,
-					"description": "Hide Karate tests annotated with @ignore tag within Activity Bar.",
-					"scope": "resource"
-				},
-				"karateRunner.tests.activityBarDisplayType": {
-					"type": "string",
-					"default": "List",
-					"enum": [
-						"List",
-						"Tree",
-						"Tag"
-					],
-					"description": "Display Karate tests as a list (List), natural directory structure (Tree) or as a tag list (Tag) within Activity Bar.",
-					"scope": "resource"
-				},
-				"karateRunner.editor.inlineCompletion": {
-					"type": "boolean",
-					"default": false,
-					"description": "Toggle showing inline completion for Karate language (Experimental).",
-					"scope": "resource"
-				},
-				"karateRunner.editor.toggleResultsInGutter": {
-					"type": "boolean",
-					"default": true,
-					"description": "Toggle showing results within the editor's gutter for feature files.",
-					"scope": "resource"
-				},
-				"karateRunner.alignDataTables.PreserveWhitespace": {
-					"type": "boolean",
-					"default": true,
-					"description": "Preserve whitespace within cells when aligning data tables.",
-					"scope": "resource"
-				},
-				"karateRunner.alignDataTables.Indent": {
-					"type": "number",
-					"default": 0,
-					"description": "Number of spaces to indent data table rows from parent (eg Examples: | * table | * set | * replace).",
-					"scope": "resource"
-				}
-			}
-		},
-		"breakpoints": [
-			{
-				"language": "karate"
-			}
-		],
-		"debuggers": [
-			{
-				"type": "karate",
-				"label": "Karate (debug)",
-				"configurationAttributes": {
-					"launch": {
-						"required": [
-							"feature",
-							"karateCli"
-						],
-						"properties": {
-							"feature": {
-								"type": "string",
-								"description": "[feature]\n\nThis property is used to find project root if multiple projects are loaded in IDE.\nAdditionally used by Karate Debug Server if [karateOptions] property not specified.\n\nRecommend default setting which finds feature files opened in IDE.",
-								"default": "^\"\\${command:karateRunner.getDebugFile}\""
-							},
-							"karateOptions": {
-								"type": "string",
-								"description": "[karateOptions]\n\nThis property is used only by Karate Debug Server.\nOverrides [feature] property to enable advanced debugging and specifying all Karate Options(classpath, threads, tags).",
-								"default": ""
-							},
-							"karateCli": {
-								"type": "string",
-								"description": "[karateCli]\n\nThis property specifies the command to start Karate Debug Server.",
-								"default": "${config:karateRunner.karateJar.commandLineArgs} -d ${command:karateRunner.getDebugPort}"
-							},
-							"debugPreStep": {
-								"type": "string",
-								"description": "[debugPreStep]\n\nThis property specifies the command Karate Debug Server should run before resuming execution of the debug session.\nTypically used by Karate-Robot to switch focus to the application under test.",
-								"default": "input(Key.ALT + Key.TAB)"
-							}
-						}
-					}
-				},
-				"configurationSnippets": [
-					{
-						"label": "Karate (debug): Maven",
-						"description": "Karate (debug) for a Maven project",
-						"body": {
-							"type": "karate",
-							"name": "Karate (debug): Maven",
-							"request": "launch",
-							"feature": "^\"\\${command:karateRunner.getDebugFile}\"",
-							"karateOptions": "",
-							"karateCli": "^\"mvn test-compile -f \\\"\\${command:karateRunner.getDebugBuildFile}\\\" exec:java -Dexec.mainClass=com.intuit.karate.cli.Main -Dexec.args=\\\"-d \\${command:karateRunner.getDebugPort}\\\" -Dexec.classpathScope=\\\"test\\\" \\${config:karateRunner.karateRunner.commandLineArgs}\""
-						}
-					},
-					{
-						"label": "Karate (debug): Gradle",
-						"description": "Karate (debug) for a Gradle project",
-						"body": {
-							"type": "karate",
-							"name": "Karate (debug): Gradle",
-							"request": "launch",
-							"feature": "^\"\\${command:karateRunner.getDebugFile}\"",
-							"karateOptions": "",
-							"karateCli": "^\"gradle compileTestJava -b \\\"\\${command:karateRunner.getDebugBuildFile}\\\" karateExecute -DmainClass=com.intuit.karate.cli.Main --args=\\\"-d \\${command:karateRunner.getDebugPort}\\\" \\${config:karateRunner.karateRunner.commandLineArgs}\""
-						}
-					},
-					{
-						"label": "Karate (debug): NPM",
-						"description": "Karate (debug) for a NPM project",
-						"body": {
-							"type": "karate",
-							"name": "Karate (debug): NPM",
-							"request": "launch",
-							"feature": "^\"\\${command:karateRunner.getDebugFile}\"",
-							"karateOptions": "",
-							"karateCli": "^\"npm run test -d -- -d \\${command:karateRunner.getDebugPort} \\${config:karateRunner.karateRunner.commandLineArgs}\""
-						}
-					}
-				]
-			}
-		],
-		"keybindings": [
-			{
-				"command": "karateRunner.paste",
-				"key": "Ctrl+V",
-				"linux": "Ctrl+Shift+V",
-				"mac": "Cmd+V",
-				"when": "editorTextFocus && editorLangId == karate"
-			},
-			{
-				"command": "karateRunner.tests.run",
-				"args": null,
-				"key": "Ctrl+R Ctrl+1",
-				"linux": "Ctrl+Shift+R Ctrl+Shift+1",
-				"mac": "Cmd+R Cmd+1",
-				"when": "editorTextFocus && editorLangId == karate"
-			},
-			{
-				"command": "karateRunner.tests.runAll",
-				"args": null,
-				"key": "Ctrl+R Ctrl+A",
-				"linux": "Ctrl+Shift+R Ctrl+Shift+A",
-				"mac": "Cmd+R Cmd+A",
-				"when": "editorTextFocus && editorLangId == karate"
-			}
-		],
-		"languages": [
-			{
-				"id": "karate",
-				"icon": {
-					"light": "./resources/light/karate-file-icon.svg",
-					"dark": "./resources/dark/karate-file-icon.svg"
-				},
-				"aliases": [
-					"Karate",
-					"karate"
-				],
-				"extensions": [
-					".feature"
-				],
-				"configuration": "./karate-language-configuration.json"
-			},
-			{
-				"id": "karate-json",
-				"configuration": "./karate-json-language-configuration.json"
-			}
-		],
-		"grammars": [
-			{
-				"language": "karate",
-				"scopeName": "source.karate",
-				"path": "./syntaxes/karate.tmLanguage.json",
-				"embeddedLanguages": {
-					"meta.embedded.block.javascript": "javascript",
-					"meta.embedded.block.json": "karate-json",
-					"meta.embedded.block.xml": "xml"
-				}
-			},
-			{
-				"language": "karate-json",
-				"scopeName": "source.json.karate",
-				"path": "./syntaxes/karate-json.tmLanguage.json"
-			},
-			{
-				"scopeName": "source.placeholder.karate",
-				"path": "./syntaxes/karate-placeholder.tmLanguage.json",
-				"injectTo": [
-					"source.karate"
-				]
-			},
-			{
-				"scopeName": "source.js.karate",
-				"path": "./syntaxes/karate-js.tmLanguage.json",
-				"injectTo": [
-					"source.js",
-					"source.karate"
-				]
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "npm run compile",
-		"test": "node ./out/test/runTest.js",
-		"checktypes": "tsc --noEmit"
-	},
-	"devDependencies": {
-		"@types/glob": "^7.2.0",
-		"@types/mocha": "^10.0.3",
-		"@types/node": "^20.8.8",
-		"@types/vscode": "^1.83.0",
-		"@typescript-eslint/eslint-plugin": "^6.9.0",
-		"@typescript-eslint/parser": "^6.9.0",
-		"@vscode/test-electron": "^2.3.6",
-		"eslint": "^8.52.0",
-		"glob": "^8.0.3",
-		"js-yaml": "^4.1.0",
-		"mocha": "^10.2.0",
-		"typescript": "^5.2.2"
-	},
-	"dependencies": {
-		"@vscode/extension-telemetry": "^0.4.9",
-		"fs-extra": "^11.1.1",
-		"mkdirp": "^1.0.4",
-		"open": "^8.2.0",
-		"parse-curl": "0.2.6",
-		"rimraf": "^2.6.3"
-	}
+  "name": "boldt-karate-runner",
+  "displayName": "Boldt Karate Runner",
+  "description": "Open/Run/Debug Karate Tests and Reports by leveraging Codelens, Activity Bar, Debugger and much more.",
+  "icon": "resources/boldt-karate.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ampere-code/boldt-karate-runner"
+  },
+  "version": "1.2.6",
+  "appInsightsId": "a285938d-a115-44ea-be2a-588a243d5f2c",
+  "license": "MIT",
+  "author": {
+    "name": "Kirk Slota"
+  },
+  "publisher": "amperecode",
+  "sponsor": {
+    "url": "https://github.com/sponsors/kirksl"
+  },
+  "engines": {
+    "vscode": "^1.83.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "karatelabs",
+    "karate",
+    "intuit",
+    "rest",
+    "api",
+    "gatling"
+  ],
+  "activationEvents": [
+    "onLanguage:karate",
+    "onLanguage:javascript",
+    "onView:karate-reports",
+    "onView:karate-tests"
+  ],
+  "main": "./out/extension",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "colors": [
+      {
+        "id": "karateRunner.trailingLineBackgroundColor",
+        "description": "Specifies the background color of the line number annotation for Examples",
+        "defaults": {
+          "dark": "#00000000",
+          "light": "#00000000",
+          "highContrast": "#00000000"
+        }
+      },
+      {
+        "id": "karateRunner.trailingLineForegroundColor",
+        "description": "Specifies the foreground color of the line number annotation for Examples",
+        "defaults": {
+          "dark": "#99999959",
+          "light": "#99999959",
+          "highContrast": "#99999999"
+        }
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "boldt-karate-runner",
+          "title": "Boldt Karate Runner",
+          "icon": "resources/boldt-karate-activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "boldt-karate-runner": [
+        {
+          "id": "karate-reports",
+          "name": "Reports",
+          "when": "workbenchState != empty"
+        },
+        {
+          "id": "karate-tests",
+          "name": "Tests",
+          "when": "workbenchState != empty"
+        },
+        {
+          "id": "karate-welcome",
+          "name": "Welcome",
+          "when": "workbenchState == empty"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "karate-welcome",
+        "contents": "Boldt Karate Runner\nIn order to use this extension you must open a folder containing a Karate project or clone from a URL.\n[Open Folder](command:vscode.openFolder)\n[Clone Repository](command:git.clone)\nAdditionally consider leveraging an existing sample project.\n[Karate Sample Projects](https://github.com/karatelabs/karate/tree/master/examples)\n[Boldt Karate Runner Sample Project](https://github.com/kirksl/karate-maven-gradle)\nLearn more about [this extension](https://marketplace.visualstudio.com/items?itemName=kirkslota.karate-runner) and [Karate](https://github.com/karatelabs/karate)."
+      }
+    ],
+    "commands": [
+      {
+        "command": "karateRunner.paste",
+        "title": "Karate Smart Paste",
+        "enablement": "editorTextFocus && editorLangId == karate"
+      },
+      {
+        "command": "karateRunner.getDebugPort",
+        "title": "Get Debug Port"
+      },
+      {
+        "command": "karateRunner.getDebugFile",
+        "title": "Get File To Debug"
+      },
+      {
+        "command": "karateRunner.getDebugBuildFile",
+        "title": "Get Build File To Debug"
+      },
+      {
+        "command": "karateRunner.reports.open",
+        "title": "Open Build Report"
+      },
+      {
+        "command": "karateRunner.reports.refreshTree",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "karateRunner.reports.displayList",
+        "title": "Display List",
+        "icon": {
+          "light": "resources/light/display-tree.svg",
+          "dark": "resources/dark/display-tree.svg"
+        }
+      },
+      {
+        "command": "karateRunner.reports.displayTree",
+        "title": "Display Tree",
+        "icon": {
+          "light": "resources/light/display-list.svg",
+          "dark": "resources/dark/display-list.svg"
+        }
+      },
+      {
+        "command": "karateRunner.reports.filterTree",
+        "title": "Filter",
+        "icon": {
+          "light": "resources/light/filter.svg",
+          "dark": "resources/dark/filter.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.setEnvironment",
+        "title": "Set Environment",
+        "icon": {
+          "light": "resources/light/vm.svg",
+          "dark": "resources/dark/vm.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.clearResults",
+        "title": "Clear Results",
+        "icon": {
+          "light": "resources/light/clear-all.svg",
+          "dark": "resources/dark/clear-all.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.refreshTree",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.displayList",
+        "title": "Display List",
+        "icon": {
+          "light": "resources/light/display-tag.svg",
+          "dark": "resources/dark/display-tag.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.displayTree",
+        "title": "Display Tree",
+        "icon": {
+          "light": "resources/light/display-list.svg",
+          "dark": "resources/dark/display-list.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.displayTag",
+        "title": "Display Tags",
+        "icon": {
+          "light": "resources/light/display-tree.svg",
+          "dark": "resources/dark/display-tree.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.filterTree",
+        "title": "Filter",
+        "icon": {
+          "light": "resources/light/filter.svg",
+          "dark": "resources/dark/filter.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.openSettings",
+        "title": "Open Settings",
+        "icon": {
+          "light": "resources/light/gear.svg",
+          "dark": "resources/dark/gear.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.open",
+        "title": "Open In Editor",
+        "icon": {
+          "light": "resources/light/open-file.svg",
+          "dark": "resources/dark/open-file.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.run",
+        "title": "Run Test",
+        "icon": {
+          "light": "resources/light/run.svg",
+          "dark": "resources/dark/run.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.runTag",
+        "title": "Run All Tests",
+        "icon": {
+          "light": "resources/light/run-all.svg",
+          "dark": "resources/dark/run-all.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.runAll",
+        "title": "Run All Tests",
+        "icon": {
+          "light": "resources/light/run-all.svg",
+          "dark": "resources/dark/run-all.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.debug",
+        "title": "Debug Test",
+        "icon": {
+          "light": "resources/light/debug-alt-small.svg",
+          "dark": "resources/dark/debug-alt-small.svg"
+        }
+      },
+      {
+        "command": "karateRunner.tests.debugAll",
+        "title": "Debug All Tests",
+        "icon": {
+          "light": "resources/light/debug-alt-small.svg",
+          "dark": "resources/dark/debug-alt-small.svg"
+        }
+      },
+      {
+        "command": "karateRunner.editor.toggleResultsInGutter",
+        "title": "Toggle Results In Gutter"
+      },
+      {
+        "command": "karateRunner.editor.alignDataTables",
+        "title": "Align Data Tables"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "karateRunner.paste",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "karateRunner.reports.refreshTree",
+          "when": "view == karate-reports",
+          "group": "navigation@1"
+        },
+        {
+          "command": "karateRunner.reports.displayList",
+          "when": "view == karate-reports && config.karateRunner.reports.activityBarDisplayType =~ /^Tree$|^Deep$/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "karateRunner.reports.displayTree",
+          "when": "view == karate-reports && config.karateRunner.reports.activityBarDisplayType =~ /^List$|^Shallow$/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "karateRunner.reports.filterTree",
+          "when": "view == karate-reports",
+          "group": "navigation@3"
+        },
+        {
+          "command": "karateRunner.tests.setEnvironment",
+          "when": "view == karate-tests",
+          "group": "navigation@1"
+        },
+        {
+          "command": "karateRunner.tests.clearResults",
+          "when": "view == karate-tests",
+          "group": "navigation@2"
+        },
+        {
+          "command": "karateRunner.tests.refreshTree",
+          "when": "view == karate-tests",
+          "group": "navigation@3"
+        },
+        {
+          "command": "karateRunner.tests.displayList",
+          "when": "view == karate-tests && config.karateRunner.tests.activityBarDisplayType == Tag",
+          "group": "navigation@4"
+        },
+        {
+          "command": "karateRunner.tests.displayTree",
+          "when": "view == karate-tests && config.karateRunner.tests.activityBarDisplayType =~ /^List$|^Shallow$/",
+          "group": "navigation@4"
+        },
+        {
+          "command": "karateRunner.tests.displayTag",
+          "when": "view == karate-tests && config.karateRunner.tests.activityBarDisplayType =~ /^Tree$|^Deep$/",
+          "group": "navigation@4"
+        },
+        {
+          "command": "karateRunner.tests.filterTree",
+          "when": "view == karate-tests",
+          "group": "navigation@5"
+        },
+        {
+          "command": "karateRunner.tests.openSettings",
+          "when": "view == karate-tests",
+          "group": "navigation@6"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "karateRunner.tests.runTag",
+          "when": "view == karate-tests && viewItem == testTag",
+          "group": "inline"
+        },
+        {
+          "command": "karateRunner.tests.runAll",
+          "when": "view == karate-tests && viewItem == testDirectory",
+          "group": "inline"
+        },
+        {
+          "command": "karateRunner.tests.runAll",
+          "when": "view == karate-tests && viewItem == testFile",
+          "group": "inline@1"
+        },
+        {
+          "command": "karateRunner.tests.debugAll",
+          "when": "view == karate-tests && viewItem == testFile",
+          "group": "inline@2"
+        },
+        {
+          "command": "karateRunner.tests.open",
+          "when": "view == karate-tests && viewItem == testFile",
+          "group": "inline@3"
+        },
+        {
+          "command": "karateRunner.tests.open",
+          "when": "view == karate-tests && viewItem == testFileIgnored",
+          "group": "inline@1"
+        },
+        {
+          "command": "karateRunner.tests.runAll",
+          "when": "view == karate-tests && viewItem == testFeature",
+          "group": "inline@1"
+        },
+        {
+          "command": "karateRunner.tests.debugAll",
+          "when": "view == karate-tests && viewItem == testFeature",
+          "group": "inline@2"
+        },
+        {
+          "command": "karateRunner.tests.run",
+          "when": "view == karate-tests && viewItem == testScenario",
+          "group": "inline@1"
+        },
+        {
+          "command": "karateRunner.tests.debug",
+          "when": "view == karate-tests && viewItem == testScenario",
+          "group": "inline@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "submenu": "KarateRunner.editor.menu",
+          "when": "resourceLangId == karate",
+          "group": "navigation@100"
+        }
+      ],
+      "KarateRunner.editor.menu": [
+        {
+          "command": "karateRunner.editor.alignDataTables",
+          "when": "resourceLangId == karate",
+          "group": "navigation@1"
+        },
+        {
+          "command": "karateRunner.tests.setEnvironment",
+          "when": "resourceLangId == karate",
+          "group": "navigation@2"
+        },
+        {
+          "command": "karateRunner.tests.clearResults",
+          "when": "resourceLangId == karate",
+          "group": "navigation@3"
+        },
+        {
+          "command": "karateRunner.tests.openSettings",
+          "when": "resourceLangId == karate",
+          "group": "navigation@4"
+        },
+        {
+          "command": "karateRunner.editor.toggleResultsInGutter",
+          "when": "resourceLangId == karate",
+          "group": "navigation@5"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "KarateRunner.editor.menu",
+        "label": "Editor Settings",
+        "icon": {
+          "dark": "resources/dark/karate-editor.svg",
+          "light": "resources/light/karate-editor.svg"
+        }
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Boldt Karate Runner",
+      "properties": {
+        "karateRunner.core.environment": {
+          "type": "string",
+          "default": "",
+          "description": "Environment to test against.  Boldt Karate Runner will use this value to set the 'karate.env' system property.",
+          "scope": "resource"
+        },
+        "karateRunner.karateJar.commandLineArgs": {
+          "type": "string",
+          "default": "java -cp karate.jar com.intuit.karate.Main",
+          "description": "Karate.jar command line.  Boldt Karate Runner will handle setting the command line with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios.  Only applies when using Karate.jar.",
+          "scope": "resource"
+        },
+        "karateRunner.karateJS.commandLineArgs": {
+          "type": "string",
+          "default": "npm run test",
+          "description": "Karate JS command line.  Boldt Karate Runner will handle setting the command line with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios.  Only applies when using Karate JS (i.e. A package.json and your choice of NPM, Yarn, etc.)",
+          "scope": "resource"
+        },
+        "karateRunner.karateCli.overrideKarateRunner": {
+          "type": "boolean",
+          "default": false,
+          "description": "Override Boldt Karate Runner utilizing the new Karate Cli.  See 'Karate Cli' section within Extension Details in the Marketplace for further information.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.karateCli.commandLineArgs": {
+          "type": "string",
+          "default": "",
+          "description": "Karate Cli command line.  Karate Cli specific arguments are specified here as defined at https://github.com/karatelabs/karate/wiki/Debug-Server#karate-options.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.karateRunner.commandLineArgs": {
+          "type": "string",
+          "default": "",
+          "description": "Boldt Karate Runner command line.  Arguments accepted by Maven or Gradle are specified here such as JVM args.  Boldt Karate Runner will handle build commands, setting the command line with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.karateRunner.default": {
+          "type": "string",
+          "default": "",
+          "description": "Default Boldt Karate Runner to use for running Karate tests.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.karateRunner.promptToSpecify": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prompt to specify Boldt Karate Runner before running Karate tests.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.buildDirectory.cleanBeforeEachRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clean build directory before running Karate tests.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.buildSystem.useWrapper": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use build system wrapper.  Only applies when using Maven or Gradle.",
+          "scope": "resource"
+        },
+        "karateRunner.reports.openAfterEachRun": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open reports in default program after running Karate tests.",
+          "scope": "resource"
+        },
+        "karateRunner.reports.toTargetByGlob": {
+          "type": "string",
+          "default": "**/{karate-reports/karate-*,**/gatling/*/index,lcov-report/index,jacoco/test/html/index,jacoco/index,cucumber-html-reports/overview-features,surefire-reports/timeline}.htm*",
+          "description": "Display reports targeted by glob pattern within Activity Bar.",
+          "scope": "resource"
+        },
+        "karateRunner.reports.activityBarDisplayType": {
+          "type": "string",
+          "default": "List",
+          "enum": [
+            "List",
+            "Tree"
+          ],
+          "description": "Display reports as a list (List) or natural directory structure (Tree) within Activity Bar.",
+          "scope": "resource"
+        },
+        "karateRunner.debugger.serverPort": {
+          "type": "number",
+          "default": -1,
+          "description": "Default port number for connecting with debug server.  Set to -1 to use dynamic port number.",
+          "scope": "resource"
+        },
+        "karateRunner.debugger.serverPortTimeout": {
+          "type": "number",
+          "default": 60,
+          "description": "Default time (seconds) to wait for debug server to start.",
+          "scope": "resource"
+        },
+        "karateRunner.statusBar.colorOnFailureThreshold": {
+          "type": "string",
+          "default": "100%",
+          "enum": [
+            "10%",
+            "20%",
+            "30%",
+            "40%",
+            "50%",
+            "60%",
+            "70%",
+            "80%",
+            "90%",
+            "100%"
+          ],
+          "description": "Color status bar background red when reaching failure threshold.",
+          "scope": "resource"
+        },
+        "karateRunner.executionHistory.limit": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum number of executions to store and re-execute from Karate status bar.",
+          "scope": "resource"
+        },
+        "karateRunner.tests.toTargetByGlob": {
+          "type": "string",
+          "default": "**/src/test/**/*.feature",
+          "description": "Display Karate tests targeted by glob pattern within Activity Bar.",
+          "scope": "resource"
+        },
+        "karateRunner.tests.toTargetByTag": {
+          "type": "string",
+          "default": "",
+          "description": "Display Karate tests targeted by tags within Activity Bar.",
+          "scope": "resource"
+        },
+        "karateRunner.tests.hideIgnored": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hide Karate tests annotated with @ignore tag within Activity Bar.",
+          "scope": "resource"
+        },
+        "karateRunner.tests.activityBarDisplayType": {
+          "type": "string",
+          "default": "List",
+          "enum": [
+            "List",
+            "Tree",
+            "Tag"
+          ],
+          "description": "Display Karate tests as a list (List), natural directory structure (Tree) or as a tag list (Tag) within Activity Bar.",
+          "scope": "resource"
+        },
+        "karateRunner.editor.inlineCompletion": {
+          "type": "boolean",
+          "default": false,
+          "description": "Toggle showing inline completion for Karate language (Experimental).",
+          "scope": "resource"
+        },
+        "karateRunner.editor.toggleResultsInGutter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Toggle showing results within the editor's gutter for feature files.",
+          "scope": "resource"
+        },
+        "karateRunner.alignDataTables.PreserveWhitespace": {
+          "type": "boolean",
+          "default": true,
+          "description": "Preserve whitespace within cells when aligning data tables.",
+          "scope": "resource"
+        },
+        "karateRunner.alignDataTables.Indent": {
+          "type": "number",
+          "default": 0,
+          "description": "Number of spaces to indent data table rows from parent (eg Examples: | * table | * set | * replace).",
+          "scope": "resource"
+        },
+        "karateRunner.karateDockerCompose.commandLine": {
+          "type": "string",
+          "default": "docker compose run --rm karate mvn clean test -q",
+          "description": "Karate docker compose command line. Boldt Karate Runner will inject the karate.options with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios. Also will inject the karate.env if available.",
+          "scope": "resource"
+        }
+      }
+    },
+    "breakpoints": [
+      {
+        "language": "karate"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "karate",
+        "label": "Karate (debug)",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "feature",
+              "karateCli"
+            ],
+            "properties": {
+              "feature": {
+                "type": "string",
+                "description": "[feature]\n\nThis property is used to find project root if multiple projects are loaded in IDE.\nAdditionally used by Karate Debug Server if [karateOptions] property not specified.\n\nRecommend default setting which finds feature files opened in IDE.",
+                "default": "^\"\\${command:karateRunner.getDebugFile}\""
+              },
+              "karateOptions": {
+                "type": "string",
+                "description": "[karateOptions]\n\nThis property is used only by Karate Debug Server.\nOverrides [feature] property to enable advanced debugging and specifying all Karate Options(classpath, threads, tags).",
+                "default": ""
+              },
+              "karateCli": {
+                "type": "string",
+                "description": "[karateCli]\n\nThis property specifies the command to start Karate Debug Server.",
+                "default": "${config:karateRunner.karateJar.commandLineArgs} -d ${command:karateRunner.getDebugPort}"
+              },
+              "debugPreStep": {
+                "type": "string",
+                "description": "[debugPreStep]\n\nThis property specifies the command Karate Debug Server should run before resuming execution of the debug session.\nTypically used by Karate-Robot to switch focus to the application under test.",
+                "default": "input(Key.ALT + Key.TAB)"
+              }
+            }
+          }
+        },
+        "configurationSnippets": [
+          {
+            "label": "Karate (debug): Maven",
+            "description": "Karate (debug) for a Maven project",
+            "body": {
+              "type": "karate",
+              "name": "Karate (debug): Maven",
+              "request": "launch",
+              "feature": "^\"\\${command:karateRunner.getDebugFile}\"",
+              "karateOptions": "",
+              "karateCli": "^\"mvn test-compile -f \\\"\\${command:karateRunner.getDebugBuildFile}\\\" exec:java -Dexec.mainClass=com.intuit.karate.cli.Main -Dexec.args=\\\"-d \\${command:karateRunner.getDebugPort}\\\" -Dexec.classpathScope=\\\"test\\\" \\${config:karateRunner.karateRunner.commandLineArgs}\""
+            }
+          },
+          {
+            "label": "Karate (debug): Gradle",
+            "description": "Karate (debug) for a Gradle project",
+            "body": {
+              "type": "karate",
+              "name": "Karate (debug): Gradle",
+              "request": "launch",
+              "feature": "^\"\\${command:karateRunner.getDebugFile}\"",
+              "karateOptions": "",
+              "karateCli": "^\"gradle compileTestJava -b \\\"\\${command:karateRunner.getDebugBuildFile}\\\" karateExecute -DmainClass=com.intuit.karate.cli.Main --args=\\\"-d \\${command:karateRunner.getDebugPort}\\\" \\${config:karateRunner.karateRunner.commandLineArgs}\""
+            }
+          },
+          {
+            "label": "Karate (debug): NPM",
+            "description": "Karate (debug) for a NPM project",
+            "body": {
+              "type": "karate",
+              "name": "Karate (debug): NPM",
+              "request": "launch",
+              "feature": "^\"\\${command:karateRunner.getDebugFile}\"",
+              "karateOptions": "",
+              "karateCli": "^\"npm run test -d -- -d \\${command:karateRunner.getDebugPort} \\${config:karateRunner.karateRunner.commandLineArgs}\""
+            }
+          }
+        ]
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "karateRunner.paste",
+        "key": "Ctrl+V",
+        "linux": "Ctrl+Shift+V",
+        "mac": "Cmd+V",
+        "when": "editorTextFocus && editorLangId == karate"
+      },
+      {
+        "command": "karateRunner.tests.run",
+        "args": null,
+        "key": "Ctrl+R Ctrl+1",
+        "linux": "Ctrl+Shift+R Ctrl+Shift+1",
+        "mac": "Cmd+R Cmd+1",
+        "when": "editorTextFocus && editorLangId == karate"
+      },
+      {
+        "command": "karateRunner.tests.runAll",
+        "args": null,
+        "key": "Ctrl+R Ctrl+A",
+        "linux": "Ctrl+Shift+R Ctrl+Shift+A",
+        "mac": "Cmd+R Cmd+A",
+        "when": "editorTextFocus && editorLangId == karate"
+      }
+    ],
+    "languages": [
+      {
+        "id": "karate",
+        "icon": {
+          "light": "./resources/light/karate-file-icon.svg",
+          "dark": "./resources/dark/karate-file-icon.svg"
+        },
+        "aliases": [
+          "Karate",
+          "karate"
+        ],
+        "extensions": [
+          ".feature"
+        ],
+        "configuration": "./karate-language-configuration.json"
+      },
+      {
+        "id": "karate-json",
+        "configuration": "./karate-json-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "karate",
+        "scopeName": "source.karate",
+        "path": "./syntaxes/karate.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.javascript": "javascript",
+          "meta.embedded.block.json": "karate-json",
+          "meta.embedded.block.xml": "xml"
+        }
+      },
+      {
+        "language": "karate-json",
+        "scopeName": "source.json.karate",
+        "path": "./syntaxes/karate-json.tmLanguage.json"
+      },
+      {
+        "scopeName": "source.placeholder.karate",
+        "path": "./syntaxes/karate-placeholder.tmLanguage.json",
+        "injectTo": [
+          "source.karate"
+        ]
+      },
+      {
+        "scopeName": "source.js.karate",
+        "path": "./syntaxes/karate-js.tmLanguage.json",
+        "injectTo": [
+          "source.js",
+          "source.karate"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "checktypes": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^10.0.3",
+    "@types/node": "^20.8.8",
+    "@types/vscode": "^1.83.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
+    "eslint": "^8.52.0",
+    "glob": "^8.0.3",
+    "js-yaml": "^4.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@vscode/extension-telemetry": "^0.4.9",
+    "fs-extra": "^11.1.1",
+    "mkdirp": "^1.0.4",
+    "open": "^8.2.0",
+    "parse-curl": "0.2.6",
+    "rimraf": "^2.6.3"
+  }
 }
