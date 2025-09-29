@@ -1,6 +1,7 @@
 name: CI/CD VS Code Extension
 
 on:
+  workflow_dispatch:   # 👈 esto habilita el botón "Run workflow" en la pestaña Actions
   push:
     branches:
       - master
