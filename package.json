@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/ampere-code/boldt-karate-runner"
   },
-  "version": "1.2.6",
+  "version": "1.2.7",
   "appInsightsId": "a285938d-a115-44ea-be2a-588a243d5f2c",
   "license": "MIT",
   "author": {
@@ -619,7 +619,7 @@
         },
         "karateRunner.karateDockerCompose.commandLine": {
           "type": "string",
-          "default": "docker compose run --rm karate mvn clean test -q",
+          "default": "docker compose run --rm karate mvn clean test",
           "description": "Karate docker compose command line. Boldt Karate Runner will inject the karate.options with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios. Also will inject the karate.env if available.",
           "scope": "resource"
         }
