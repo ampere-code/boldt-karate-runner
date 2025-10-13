@@ -2,13 +2,17 @@
 
 Notable changes to this project will be documented in this file.
 
+## 1.2.8
+
+Add "Karate response Viewer". Initial development for a friendly UI
+
 ## 1.2.7
 
-Elimino valor por defecto -q del comando docker compose
+Remove default value -q from "Karate docker compose command line"
 
 ## 1.2.6
 
-Fork para boldt. Se agrega "Karate docker compose command line" para poder ejecutar con docker compose
+Fork for boldt. Append "Karate docker compose command line" for execution with docker compose
 
 ## 1.2.5
 
