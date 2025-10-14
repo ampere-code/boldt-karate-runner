@@ -2,9 +2,17 @@
 
 Notable changes to this project will be documented in this file.
 
+## 1.2.9
+
+- Add "Karate Viewer".
+- Add log view.
+- Remove terminal execution and move the logs to Karate Viewer.
+- Capture response on GRPC and HTTP.
+- Colors on console
+
 ## 1.2.8
 
-Add "Karate response Viewer". Initial development for a friendly UI
+Add "Karate Viewer". Initial development for a friendly UI
 
 ## 1.2.7
 

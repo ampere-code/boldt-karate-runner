@@ -1,4 +1,7 @@
+import * as readline from "readline";
+import * as child_process from "child_process";
 import * as fs from "fs";
+import * as path from "path";
 import {
   isPortFree,
   getProjectDetail,
@@ -26,37 +29,201 @@ let debugFeatureFile: string = "";
 let responsePanel: vscode.WebviewPanel | undefined;
 
 // 🧱 HTML base reutilizable
-const RESPONSE_VIEWER_HTML = `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body {
-      background-color: #0b0f14;
-      color: #e5e7eb;
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 16px;
-    }
-    h2 { color: #60a5fa; margin-top: 0; }
-    pre {
-      background: #121820;
-      padding: 12px;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-family: monospace;
-    }
-  </style>
-</head>
-<body>
-  <h2>🧩 Karate Response Viewer</h2>
-  <div id="status">Waiting...</div>
-</body>
-</html>
-`;
+// const RESPONSE_VIEWER_HTML = `
+// <!DOCTYPE html>
+// <html lang="es">
+// <head>
+//   <meta charset="UTF-8">
+//   <style>
+//     body {
+//       background-color: #0b0f14;
+//       color: #e5e7eb;
+//       font-family: system-ui, sans-serif;
+//       margin: 0;
+//       padding: 16px;
+//     }
+//     h2 { color: #60a5fa; margin-top: 0; }
+//     pre {
+//       background: #121820;
+//       padding: 12px;
+//       border-radius: 8px;
+//       overflow-x: auto;
+//       font-family: monospace;
+//     }
+//   </style>
+// </head>
+// <body>
+//   <h2>🧩 Karate Response Viewer</h2>
+//   <div id="status">Waiting...</div>
+//   <div id="console" style="
+//     margin-top:16px;
+//     background:#0f172a;
+//     border:1px solid #334155;
+//     border-radius:6px;
+//     padding:8px;
+//     font-family:monospace;
+//     font-size:12px;
+//     height:200px;
+//     overflow-y:auto;
+//     white-space:pre-wrap;
+//     color:#e5e7eb;
+//   "></div>
+//   <script>
+//       const vscode = acquireVsCodeApi();
 
-async function showResult(e) {
+//       // Escucha mensajes enviados desde el extension host
+//       window.addEventListener('message', event => {
+//         const msg = event.data;
+//         if (msg.command === 'console') {
+//           const div = document.getElementById('console');
+//           div.textContent += msg.text;
+//           div.scrollTop = div.scrollHeight; // autoscroll
+//         }
+//       });
+//     </script>
+// </body>
+// </html>
+// `;
+
+// async function showResult(e) {
+//   if (
+//     e.fsPath.endsWith("karate-summary-json.txt") ||
+//     e.fsPath.endsWith("karate-summary.json")
+//   ) {
+//     try {
+//       const content = await vscode.workspace.fs.readFile(e);
+//       const json = JSON.parse(content.toString());
+//       console.log("🧩 Karate Summary:", json);
+
+//       // 🧱 Extraemos los datos principales (según nuevo formato)
+//       const {
+//         env,
+//         version,
+//         resultDate,
+//         threads,
+//         efficiency,
+//         totalTime,
+//         elapsedTime,
+//         featuresPassed,
+//         featuresFailed,
+//         featuresSkipped,
+//         scenariosPassed,
+//         scenariosfailed,
+//         featureSummary,
+//       } = json;
+
+//       const html = `
+//         <div id="console" style="
+//           margin-top:16px;
+//           background:#0f172a;
+//           border:1px solid #334155;
+//           border-radius:6px;
+//           padding:8px;
+//           font-family:monospace;
+//           font-size:12px;
+//           height:200px;
+//           overflow-y:auto;
+//           white-space:pre-wrap;
+//           color:#e5e7eb;
+//         "></div>
+//         <h2>🧩 Karate Test Summary</h2>
+//         <table style="border-collapse:collapse;margin-top:8px;">
+//           <tr><td><strong>Environment:</strong></td><td>${env || "-"}</td></tr>
+//           <tr><td><strong>Version:</strong></td><td>${version || "-"}</td></tr>
+//           <tr><td><strong>Date:</strong></td><td>${resultDate || "-"}</td></tr>
+//           <tr><td><strong>Threads:</strong></td><td>${threads || 1}</td></tr>
+//           <tr><td><strong>Efficiency:</strong></td><td>${(
+//             efficiency || 0
+//           ).toFixed(4)}</td></tr>
+//           <tr><td><strong>Total Time:</strong></td><td>${
+//             totalTime || 0
+//           } ms</td></tr>
+//           <tr><td><strong>Elapsed Time:</strong></td><td>${(
+//             (elapsedTime || 0) / 1000
+//           ).toFixed(2)} s</td></tr>
+//         </table>
+
+//         <h3 style="margin-top:20px;color:#60a5fa;">Results</h3>
+//         <table style="border-collapse:collapse;margin-top:8px;width:100%;text-align:center;">
+//           <thead>
+//             <tr style="background:#1e293b;color:#e5e7eb;">
+//               <th style="padding:6px;border-bottom:1px solid #374151;"></th>
+//               <th style="padding:6px;border-bottom:1px solid #374151;">✅ Passed</th>
+//               <th style="padding:6px;border-bottom:1px solid #374151;">❌ Failed</th>
+//               <th style="padding:6px;border-bottom:1px solid #374151;">⏭ Ignored</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             <tr style="background:#121820;color:#e5e7eb;">
+//               <td style="padding:6px;border-bottom:1px solid #374151;text-align:left;"><strong>Features</strong></td>
+//               <td style="padding:6px;border-bottom:1px solid #374151;">${
+//                 featuresPassed || 0
+//               }</td>
+//               <td style="padding:6px;border-bottom:1px solid #374151;color:#f87171;">${
+//                 featuresFailed || 0
+//               }</td>
+//               <td style="padding:6px;border-bottom:1px solid #374151;">${
+//                 featuresSkipped || 0
+//               }</td>
+//             </tr>
+//             <tr style="background:#121820;color:#e5e7eb;">
+//               <td style="padding:6px;text-align:left;"><strong>Scenarios</strong></td>
+//               <td style="padding:6px;">${scenariosPassed || 0}</td>
+//               <td style="padding:6px;color:#f87171;">${
+//                 scenariosfailed || 0
+//               }</td>
+//               <td style="padding:6px;">0</td>
+//             </tr>
+//           </tbody>
+//         </table>
+//       `;
+
+//       const panel = showResponsePanel();
+//       const htmlReport = e.fsPath.replace(
+//         /karate-summary-json\.txt$/,
+//         "karate-summary.html"
+//       );
+//       panel.webview.html = panel.webview.html.replace(
+//         /<div id="status">.*<\/div>/,
+//         `<div id="status">${html}</div>`
+//       );
+//     } catch (err) {
+//       console.error("Error reading summary:", err);
+//     }
+//   }
+// }
+
+// function showResponsePanel(statusMessage = "Waiting...") {
+//   const updateHtml = (panel: vscode.WebviewPanel, message: string) => {
+//     // Simplemente actualiza un texto dentro del HTML
+//     const updated = RESPONSE_VIEWER_HTML.replace("Waiting...", message);
+//     panel.webview.html = updated;
+//   };
+
+//   if (responsePanel) {
+//     // Si ya está abierta, reutilizarla
+//     responsePanel.reveal(vscode.ViewColumn.Beside);
+//     updateHtml(responsePanel, statusMessage);
+//   } else {
+//     // Crear una nueva si no existe
+//     responsePanel = vscode.window.createWebviewPanel(
+//       "karateResponse",
+//       "Karate Response Viewer",
+//       vscode.ViewColumn.Beside,
+//       { enableScripts: true, retainContextWhenHidden: true }
+//     );
+
+//     updateHtml(responsePanel, statusMessage);
+
+//     responsePanel.onDidDispose(() => {
+//       responsePanel = undefined;
+//     });
+//   }
+
+//   return responsePanel;
+// }
+
+async function showResult(e: vscode.Uri) {
   if (
     e.fsPath.endsWith("karate-summary-json.txt") ||
     e.fsPath.endsWith("karate-summary.json")
@@ -64,138 +231,51 @@ async function showResult(e) {
     try {
       const content = await vscode.workspace.fs.readFile(e);
       const json = JSON.parse(content.toString());
-      console.log("🧩 Karate Summary:", json);
-
-      // 🧱 Extraemos los datos principales (según nuevo formato)
-      const {
-        env,
-        version,
-        resultDate,
-        threads,
-        efficiency,
-        totalTime,
-        elapsedTime,
-        featuresPassed,
-        featuresFailed,
-        featuresSkipped,
-        scenariosPassed,
-        scenariosfailed,
-        featureSummary,
-      } = json;
-
-      const html = `
-        <div id="console" style="
-          margin-top:16px;
-          background:#0f172a;
-          border:1px solid #334155;
-          border-radius:6px;
-          padding:8px;
-          font-family:monospace;
-          font-size:12px;
-          height:200px;
-          overflow-y:auto;
-          white-space:pre-wrap;
-          color:#e5e7eb;
-        "></div>
-        <h2>🧩 Karate Test Summary</h2>
-        <table style="border-collapse:collapse;margin-top:8px;">
-          <tr><td><strong>Environment:</strong></td><td>${env || "-"}</td></tr>
-          <tr><td><strong>Version:</strong></td><td>${version || "-"}</td></tr>
-          <tr><td><strong>Date:</strong></td><td>${resultDate || "-"}</td></tr>
-          <tr><td><strong>Threads:</strong></td><td>${threads || 1}</td></tr>
-          <tr><td><strong>Efficiency:</strong></td><td>${(
-            efficiency || 0
-          ).toFixed(4)}</td></tr>
-          <tr><td><strong>Total Time:</strong></td><td>${
-            totalTime || 0
-          } ms</td></tr>
-          <tr><td><strong>Elapsed Time:</strong></td><td>${(
-            (elapsedTime || 0) / 1000
-          ).toFixed(2)} s</td></tr>
-        </table>
-
-        <h3 style="margin-top:20px;color:#60a5fa;">Results</h3>
-        <table style="border-collapse:collapse;margin-top:8px;width:100%;text-align:center;">
-          <thead>
-            <tr style="background:#1e293b;color:#e5e7eb;">
-              <th style="padding:6px;border-bottom:1px solid #374151;"></th>
-              <th style="padding:6px;border-bottom:1px solid #374151;">✅ Passed</th>
-              <th style="padding:6px;border-bottom:1px solid #374151;">❌ Failed</th>
-              <th style="padding:6px;border-bottom:1px solid #374151;">⏭ Ignored</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="background:#121820;color:#e5e7eb;">
-              <td style="padding:6px;border-bottom:1px solid #374151;text-align:left;"><strong>Features</strong></td>
-              <td style="padding:6px;border-bottom:1px solid #374151;">${
-                featuresPassed || 0
-              }</td>
-              <td style="padding:6px;border-bottom:1px solid #374151;color:#f87171;">${
-                featuresFailed || 0
-              }</td>
-              <td style="padding:6px;border-bottom:1px solid #374151;">${
-                featuresSkipped || 0
-              }</td>
-            </tr>
-            <tr style="background:#121820;color:#e5e7eb;">
-              <td style="padding:6px;text-align:left;"><strong>Scenarios</strong></td>
-              <td style="padding:6px;">${scenariosPassed || 0}</td>
-              <td style="padding:6px;color:#f87171;">${
-                scenariosfailed || 0
-              }</td>
-              <td style="padding:6px;">0</td>
-            </tr>
-          </tbody>
-        </table>
-      `;
 
       const panel = showResponsePanel();
-      const htmlReport = e.fsPath.replace(
-        /karate-summary-json\.txt$/,
-        "karate-summary.html"
-      );
-      // if (fs.existsSync(htmlReport)) {
-      //   html += `<p style="margin-top:10px;">
-      //     <a href="file://${htmlReport}" style="color:#60a5fa;text-decoration:none;">View HTML report</a>
-      //   </p>`;
-      // }
-      panel.webview.html = panel.webview.html.replace(
-        /<div id="status">.*<\/div>/,
-        `<div id="status">${html}</div>`
-      );
+      panel.webview.postMessage({
+        command: "status",
+        text: "✅ Karate summary loaded",
+      });
+      panel.webview.postMessage({
+        command: "result-data",
+        data: json,
+      });
     } catch (err) {
-      console.error("Error reading summary:", err);
+      const panel = showResponsePanel();
+      panel.webview.postMessage({
+        command: "status",
+        text: `❌ Error reading summary: ${err.message}`,
+      });
     }
   }
 }
 
 function showResponsePanel(statusMessage = "Waiting...") {
-  const updateHtml = (panel: vscode.WebviewPanel, message: string) => {
-    // Simplemente actualiza un texto dentro del HTML
-    const updated = RESPONSE_VIEWER_HTML.replace("Waiting...", message);
-    panel.webview.html = updated;
-  };
+  const extensionPath =
+    vscode.extensions.getExtension("amperecode.boldt-karate-runner")
+      ?.extensionPath || __dirname;
+  const htmlPath = path.join(extensionPath, "media", "karateViewer.html");
+  const htmlContent = fs.readFileSync(htmlPath, "utf8");
 
   if (responsePanel) {
-    // Si ya está abierta, reutilizarla
     responsePanel.reveal(vscode.ViewColumn.Beside);
-    updateHtml(responsePanel, statusMessage);
   } else {
-    // Crear una nueva si no existe
     responsePanel = vscode.window.createWebviewPanel(
       "karateResponse",
-      "Karate Response Viewer",
+      "Karate Viewer",
       vscode.ViewColumn.Beside,
       { enableScripts: true, retainContextWhenHidden: true }
     );
-
-    updateHtml(responsePanel, statusMessage);
+    responsePanel.webview.html = htmlContent;
 
     responsePanel.onDidDispose(() => {
       responsePanel = undefined;
     });
   }
 
+  // mostrar estado inicial
+  responsePanel.webview.postMessage({ command: "status", text: statusMessage });
   return responsePanel;
 }
 
@@ -396,6 +476,10 @@ async function runKarateTest(args = null) {
   let karateRunner = null;
 
   const panel = showResponsePanel("Executing tests...");
+
+  panel.webview.postMessage({
+    command: "reset",
+  });
 
   if (args === null) {
     const activeEditor: vscode.TextEditor = vscode.window.activeTextEditor;
@@ -680,20 +764,18 @@ async function runKarateTest(args = null) {
     )
   );
   const watcher = vscode.workspace.createFileSystemWatcher(relativePattern);
-  let reportUrisFound: vscode.Uri[] = [];
+  const reportUrisFound: vscode.Uri[] = [];
 
   watcher.onDidCreate(async (e) => {
     if (reportUrisFound.toString().indexOf(e.toString()) === -1) {
       reportUrisFound.push(e);
     }
-    showResult(e);
   });
 
   watcher.onDidChange((e) => {
     if (reportUrisFound.toString().indexOf(e.toString()) === -1) {
       reportUrisFound.push(e);
     }
-    showResult(e);
   });
 
   // nwtachers for json/txt for view results
@@ -721,16 +803,10 @@ async function runKarateTest(args = null) {
   );
 
   watcherResult.onDidCreate(async (e) => {
-    if (reportUrisFound.toString().indexOf(e.toString()) === -1) {
-      reportUrisFound.push(e);
-    }
     showResult(e);
   });
 
   watcherResult.onDidChange((e) => {
-    if (reportUrisFound.toString().indexOf(e.toString()) === -1) {
-      reportUrisFound.push(e);
-    }
     showResult(e);
   });
 
@@ -740,15 +816,148 @@ async function runKarateTest(args = null) {
     seo.shellArgs = ["/d", "/c"];
   }
 
-  const exec = new vscode.ShellExecution(runCommand, seo);
-  const task = new vscode.Task(
-    { type: "karate" },
-    vscode.TaskScope.Workspace,
-    "Karate Runner",
-    "karate",
-    exec,
-    []
-  );
+  setTimeout(() => {
+    panel.webview.postMessage({
+      command: "console",
+      text: `$ ${runCommand}\n\n`,
+    });
+  }, 250);
+
+  const child = child_process.spawn(runCommand, {
+    cwd: projectRootPath,
+    shell: true,
+    env: process.env,
+  });
+
+  // Captura stdout
+
+  let capturingResponse = false;
+  let buffer = "";
+
+  const rl = readline.createInterface({ input: child.stdout });
+
+  rl.on("line", (line) => {
+    // 🔹 Limpia colores ANSI y espacios
+    // eslint-disable-next-line no-control-regex
+    const clean = line.replace(/\u001b\[[0-9;]*m/g, "").trim();
+
+    // 🔹 Siempre mostrar en consola
+    panel.webview.postMessage({ command: "console", text: line + "\n" });
+
+    // 🔹 Detectar inicio
+    if (clean.includes("--- begin response ---")) {
+      capturingResponse = true;
+      buffer = "";
+      return;
+    }
+
+    // 🔹 Detectar fin
+    if (clean.includes("--- end response ---")) {
+      capturingResponse = false;
+
+      try {
+        // Limpieza avanzada: quita timestamps y [INFO] [print]
+        const cleaned = buffer
+          .split("\n")
+          .map((l) =>
+            l
+              .replace(
+                /^(\d{2}:\d{2}:\d{2}\.\d+)?\s*\[INFO\]\s*\[print\]\s*/,
+                ""
+              )
+              .trim()
+          )
+          .filter((l) => l.length > 0)
+          .join("\n")
+          .trim();
+
+        // Mostrar bloque crudo
+        panel.webview.postMessage({
+          command: "console",
+          text: `<span style="color:#9ca3af;">🧾 Raw captured block:\n${cleaned}</span>\n`,
+        });
+
+        // Detectar el inicio real del JSON
+        const startIdx = cleaned.search(/[{\[]/);
+        if (startIdx === -1) throw new Error("Not a valid JSON block");
+        const jsonText = cleaned.substring(startIdx);
+
+        const json = JSON.parse(jsonText);
+
+        // ✅ Mostrar en panel
+        panel.webview.postMessage({
+          command: "response",
+          text: JSON.stringify(json, null, 2),
+        });
+
+        // ✅ Mostrar en consola (verde)
+        panel.webview.postMessage({
+          command: "console",
+          text: `<span style="color:#16a34a;">📦 Captured Response:\n${JSON.stringify(
+            json,
+            null,
+            2
+          )}</span>\n\n`,
+        });
+      } catch (err) {
+        // ❌ Error + bloque fallido
+        panel.webview.postMessage({
+          command: "console",
+          text:
+            `<span style="color:#f87171;">⚠️ Error parsing response: ${err.message}</span>\n` +
+            `<span style="color:#fbbf24;">🪵 Raw block (unformatted):</span>\n${buffer}\n\n`,
+        });
+      }
+
+      buffer = "";
+      return;
+    }
+
+    // 🔹 Acumular solo mientras estamos dentro del bloque
+    if (capturingResponse) {
+      // ignorar líneas vacías
+      if (!clean) return;
+      buffer += clean + "\n";
+    }
+  });
+
+  // Captura stderr
+  child.stderr.on("data", (data) => {
+    const text = data.toString().replace(/\\x1b\\[[0-9;]*m/g, "");
+    panel.webview.postMessage({ command: "console", text: `❌ ${text}` });
+  });
+
+  child.on("exit", (code) => {
+    if (code === 0) {
+      panel.webview.postMessage({
+        command: "status",
+        text: "✅ Finished successfully",
+      });
+    } else {
+      panel.webview.postMessage({
+        command: "status",
+        text: `❌ Finished with errors (exit code ${code})`,
+      });
+    }
+  });
+
+  // Evento al cerrar el proceso
+  child.on("close", (code) => {
+    panel.webview.postMessage({
+      command: "console",
+      text: `\n🏁 Finished with exit code ${code}\n`,
+    });
+  });
+
+  // const exec = new vscode.ShellExecution(runCommand, seo);
+  // const task = new vscode.Task(
+  //   { type: "karate" },
+  //   vscode.TaskScope.Workspace,
+  //   "Karate Runner",
+  //   "karate",
+  //   exec,
+  //   []
+  // );
 
   /*
 	vscode.tasks.onDidStartTask((e) => 
@@ -759,57 +968,57 @@ async function runKarateTest(args = null) {
 	});
 	*/
 
-  vscode.tasks.onDidEndTask((e) => {
-    if (e.execution.task.name == "Karate Runner") {
-      ProviderStatusBar.setExecutionState(false);
-      ProviderStatusBar.setStatus();
-      isTaskExecuting = false;
-      watcher.dispose();
+  // vscode.tasks.onDidEndTask((e) => {
+  //   if (e.execution.task.name == "Karate Runner") {
+  //     ProviderStatusBar.setExecutionState(false);
+  //     ProviderStatusBar.setStatus();
+  //     isTaskExecuting = false;
+  //     watcher.dispose();
 
-      ProviderExecutions.addExecutionToHistory();
-      ProviderExecutions.executionArgs = null;
+  //     ProviderExecutions.addExecutionToHistory();
+  //     ProviderExecutions.executionArgs = null;
 
-      if (
-        vscode.workspace
-          .getConfiguration("karateRunner.reports")
-          .get("openAfterEachRun")
-      ) {
-        reportUrisFound.forEach((reportUri) => {
-          openExternalUri(reportUri);
-        });
-      }
-    }
+  //     if (
+  //       vscode.workspace
+  //         .getConfiguration("karateRunner.reports")
+  //         .get("openAfterEachRun")
+  //     ) {
+  //       reportUrisFound.forEach((reportUri) => {
+  //         openExternalUri(reportUri);
+  //       });
+  //     }
+  //   }
 
-    reportUrisFound = [];
-  });
+  //   reportUrisFound = [];
+  // });
 
-  ProviderStatusBar.resetStatus();
-  ProviderExecutions.executionArgs = args;
+  // ProviderStatusBar.resetStatus();
+  // ProviderExecutions.executionArgs = args;
 
-  const showProgress = (task: vscode.TaskExecution) => {
-    vscode.window.withProgress(
-      {
-        location: { viewId: "karate-tests" },
-        cancellable: false,
-      },
-      async (progress) => {
-        await new Promise<void>((resolve) => {
-          const interval = setInterval(() => {
-            if (!isTaskExecuting) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 1000);
-        });
-      }
-    );
-  };
+  // const showProgress = (task: vscode.TaskExecution) => {
+  //   vscode.window.withProgress(
+  //     {
+  //       location: { viewId: "karate-tests" },
+  //       cancellable: false,
+  //     },
+  //     async (progress) => {
+  //       await new Promise<void>((resolve) => {
+  //         const interval = setInterval(() => {
+  //           if (!isTaskExecuting) {
+  //             clearInterval(interval);
+  //             resolve();
+  //           }
+  //         }, 1000);
+  //       });
+  //     }
+  //   );
+  // };
 
-  let isTaskExecuting = true;
-  ProviderStatusBar.setExecutionState(true);
-  ProviderStatusBar.setStatus();
+  // const isTaskExecuting = true;
+  // ProviderStatusBar.setExecutionState(true);
+  // ProviderStatusBar.setStatus();
 
-  vscode.tasks.executeTask(task).then((task) => showProgress(task));
+  // vscode.tasks.executeTask(task).then((task) => showProgress(task));
 }
 
 async function debugKarateTest(args = null) {

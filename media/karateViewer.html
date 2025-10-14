@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --card: #121820;
+        --border: #1e293b;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --accent: #60a5fa;
+        --success: #16a34a;
+        --danger: #dc2626;
+      }
+
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu,
+          sans-serif;
+        margin: 0;
+        padding: 24px;
+      }
+
+      h2 {
+        color: var(--accent);
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 20px;
+      }
+
+      section {
+        margin-top: 24px;
+      }
+
+      /* 🧩 Test Summary Card */
+      .summary-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+      }
+
+      .summary-card table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      .summary-card td {
+        padding: 6px 4px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      .summary-card td:first-child {
+        width: 160px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .summary-card tr:last-child td {
+        border-bottom: none;
+      }
+
+      /* 🧮 Results Table */
+      .results-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .results-table th {
+        background: var(--border);
+        color: var(--text);
+        padding: 8px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .results-table td {
+        text-align: center;
+        padding: 8px;
+        border-top: 1px solid var(--border);
+      }
+
+      .results-table td:first-child {
+        text-align: left;
+        padding-left: 16px;
+      }
+
+      .results-table th:first-child {
+        background: var(--border);
+        text-align: left;
+        padding-left: 16px;
+      }
+
+      .results-table td.success {
+        color: var(--success);
+        font-weight: bold;
+      }
+
+      .results-table td.fail {
+        color: var(--danger);
+        font-weight: bold;
+      }
+
+      pre {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .response-block {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #e5e7eb;
+        white-space: pre-wrap;
+        overflow-x: auto;
+        margin-top: 10px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+      }
+
+      .string {
+        color: #93c5fd;
+      } /* celeste */
+      .number {
+        color: #facc15;
+      } /* amarillo */
+      .boolean {
+        color: #34d399;
+      } /* verde */
+      .null {
+        color: #9ca3af;
+      } /* gris claro */
+      .key {
+        color: #60a5fa;
+      } /* azul */
+    </style>
+  </head>
+  <body>
+    <h2>🧩 Karate Viewer</h2>
+
+    <section>
+      <div>
+        <strong>Status:</strong> <span id="status">Waiting execution...</span>
+      </div>
+    </section>
+
+    <!-- <section>
+      <h3>Console Output</h3>
+      <pre id="console"></pre>
+    </section> -->
+
+    <!-- <section>
+      <h3>Console Output</h3>
+      <div
+        id="console"
+        style="
+          margin-top: 16px;
+          background: #0f172a;
+          border: 1px solid #334155;
+          border-radius: 6px;
+          padding: 8px;
+          font-family: monospace;
+          font-size: 12px;
+          height: 200px;
+          overflow-y: auto;
+          white-space: pre-wrap;
+          color: #e5e7eb;
+        "
+      ></div>
+    </section> -->
+
+    <section>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        "
+      >
+        <h3 style="margin: 0">Console Output</h3>
+        <button
+          id="copyConsoleBtn"
+          style="
+            background: #1e293b;
+            color: #e5e7eb;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 12px;
+          "
+        >
+          📋 Copy
+        </button>
+      </div>
+
+      <div
+        id="console"
+        style="
+          margin-top: 4px;
+          background: #0f172a;
+          border: 1px solid #334155;
+          border-radius: 6px;
+          padding: 8px;
+          font-family: monospace;
+          font-size: 12px;
+          height: 200px;
+          overflow-y: auto;
+          white-space: pre-wrap;
+          color: #e5e7eb;
+        "
+      ></div>
+    </section>
+
+    <script>
+      // 📋 Copiar consola al portapapeles
+      document
+        .getElementById("copyConsoleBtn")
+        .addEventListener("click", async () => {
+          const consoleDiv = document.getElementById("console");
+          const text = consoleDiv.innerText || consoleDiv.textContent;
+          try {
+            await navigator.clipboard.writeText(text);
+            const btn = document.getElementById("copyConsoleBtn");
+            const oldText = btn.textContent;
+            btn.textContent = "✅ Copied!";
+            setTimeout(() => (btn.textContent = oldText), 1500);
+          } catch (err) {
+            alert("❌ Error copying to clipboard: " + err);
+          }
+        });
+    </script>
+
+    <section>
+      <h3 style="color: var(--accent); margin-bottom: 8px">Results</h3>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>✅ Passed</th>
+            <th>❌ Failed</th>
+            <th>⏭ Skipped</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Features</strong></td>
+            <td id="featuresPassed" class="success">0</td>
+            <td id="featuresFailed" class="fail">0</td>
+            <td id="featuresSkipped">0</td>
+          </tr>
+          <tr>
+            <td><strong>Scenarios</strong></td>
+            <td id="scenariosPassed" class="success">0</td>
+            <td id="scenariosFailed" class="fail">0</td>
+            <td id="scenariosSkipped">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h3></h3>
+      <div id="responses"></div>
+    </section>
+
+    <section>
+      <h3 style="color: var(--accent); margin-bottom: 8px">Test Summary</h3>
+      <div class="summary-card">
+        <table>
+          <tbody>
+            <tr>
+              <td>Environment:</td>
+              <td id="env">-</td>
+            </tr>
+            <tr>
+              <td>Version:</td>
+              <td id="version">-</td>
+            </tr>
+            <tr>
+              <td>Date:</td>
+              <td id="resultDate">-</td>
+            </tr>
+            <tr>
+              <td>Threads:</td>
+              <td id="threads">-</td>
+            </tr>
+            <tr>
+              <td>Efficiency:</td>
+              <td id="efficiency">-</td>
+            </tr>
+            <tr>
+              <td>Total Time:</td>
+              <td id="totalTime">-</td>
+            </tr>
+            <tr>
+              <td>Elapsed Time:</td>
+              <td id="elapsedTime">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <script>
+      const vscode = acquireVsCodeApi();
+
+      window.addEventListener("message", (event) => {
+        const msg = event.data;
+        switch (msg.command) {
+          // 🧹 RESET VIEWER
+          case "reset":
+            resetViewer();
+            break;
+
+          // 🔵 STATUS
+          case "status":
+            document.getElementById("status").textContent = msg.text;
+            break;
+
+          // 🧾 CONSOLE
+          // case "console":
+          //   const c = document.getElementById("console");
+          //   c.textContent += msg.text;
+          //   c.scrollTop = c.scrollHeight;
+          //   break;
+          case "console":
+            appendConsole(msg.text);
+            break;
+          // 📊 RESULT DATA
+          case "result-data":
+            fillResult(msg.data);
+            break;
+
+          // 🧩 RESPONSE CAPTURE
+          // case "response":
+          //   const r = document.getElementById("responses");
+          //   r.innerHTML += `<pre>${msg.text}</pre>`;
+          //   break;
+          case "response":
+            const r = document.getElementById("responses");
+            const pretty = syntaxHighlight(msg.text);
+            r.innerHTML += `
+                  <details open>
+                    <summary style="cursor:pointer;color:#60a5fa;margin-top:8px;">
+                    📡 Captured Response
+                    </summary>
+                    <pre class="response-block">${pretty}</pre>
+                  </details>
+                  `;
+            r.scrollTop = r.scrollHeight;
+            break;
+        }
+      });
+
+      function appendConsole(text) {
+        const consoleDiv = document.getElementById("console");
+        const lines = text.split(/\r?\n/);
+
+        // flag para colorear bloque completo del response
+        let inResponseBlock = false;
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          const span = document.createElement("div");
+          span.textContent = line;
+
+          // --- detectar inicio del bloque verde
+          if (line.includes("📦 Captured Response:")) {
+            inResponseBlock = true;
+            span.style.color = "#4ade80"; // verde
+            span.style.fontWeight = "bold";
+            span.style.marginTop = "6px";
+          }
+          // --- si seguimos dentro del bloque response
+          else if (inResponseBlock) {
+            span.style.color = "#4ade80"; // verde
+            // si llega una línea vacía o separador, cortamos el bloque
+            if (line.trim() === "}" || line.trim() === "") {
+              inResponseBlock = false;
+            }
+          }
+          // --- demás tipos de logs
+          else if (line.includes("[ERROR]") || line.includes("❌")) {
+            span.style.color = "#f87171"; // rojo
+          } else if (line.includes("[WARN]")) {
+            span.style.color = "#facc15"; // amarillo
+          } else if (line.includes("[INFO]")) {
+            span.style.color = "#60a5fa"; // azul
+          } else {
+            span.style.color = "#e5e7eb"; // gris claro
+          }
+
+          consoleDiv.appendChild(span);
+        }
+
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+      }
+
+      // 🧠 Función para llenar los resultados
+      function fillResult(data) {
+        if (!data) return;
+
+        document.getElementById("env").textContent = data.env || "-";
+        document.getElementById("version").textContent = data.version || "-";
+        document.getElementById("resultDate").textContent =
+          data.resultDate || "-";
+        document.getElementById("threads").textContent = data.threads || "1";
+        document.getElementById("efficiency").textContent = (
+          data.efficiency || 0
+        ).toFixed(4);
+        document.getElementById("totalTime").textContent = `${
+          data.totalTime || 0
+        } ms`;
+        document.getElementById("elapsedTime").textContent = `${(
+          (data.elapsedTime || 0) / 1000
+        ).toFixed(2)} s`;
+
+        document.getElementById("featuresPassed").textContent =
+          data.featuresPassed || 0;
+        document.getElementById("featuresFailed").textContent =
+          data.featuresFailed || 0;
+        document.getElementById("featuresSkipped").textContent =
+          data.featuresSkipped || 0;
+        document.getElementById("scenariosPassed").textContent =
+          data.scenariosPassed || 0;
+        document.getElementById("scenariosFailed").textContent =
+          data.scenariosfailed || 0;
+        document.getElementById("scenariosSkipped").textContent = 0;
+      }
+
+      // 🧹 Función de reset general
+      function resetViewer() {
+        // Reset status
+        const status = document.getElementById("status");
+        status.textContent = "Executing tests...";
+
+        // Limpia consola
+        const c = document.getElementById("console");
+        c.textContent = "";
+
+        // Limpia responses
+        const r = document.getElementById("responses");
+        r.innerHTML = "";
+
+        // Resetea campos del summary y results
+        const ids = [
+          "env",
+          "version",
+          "resultDate",
+          "threads",
+          "efficiency",
+          "totalTime",
+          "elapsedTime",
+          "featuresPassed",
+          "featuresFailed",
+          "featuresSkipped",
+          "scenariosPassed",
+          "scenariosFailed",
+          "scenariosSkipped",
+        ];
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (["env", "version", "resultDate"].includes(id))
+            el.textContent = "-";
+          else el.textContent = "0";
+        });
+      }
+      function syntaxHighlight(jsonText) {
+        if (!jsonText) return "";
+        return jsonText
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(
+            /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+            (match) => {
+              let cls = "number";
+              if (/^"/.test(match)) {
+                cls = /:$/.test(match) ? "key" : "string";
+              } else if (/true|false/.test(match)) {
+                cls = "boolean";
+              } else if (/null/.test(match)) {
+                cls = "null";
+              }
+              return `<span class="${cls}">${match}</span>`;
+            }
+          );
+      }
+    </script>
+  </body>
+</html>
