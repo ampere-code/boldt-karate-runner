@@ -2,6 +2,10 @@
 
 Notable changes to this project will be documented in this file.
 
+## 1.2.10
+
+Improve Improvement in Karate Viewer for captured responses
+
 ## 1.2.9
 
 - Add "Karate Viewer".
