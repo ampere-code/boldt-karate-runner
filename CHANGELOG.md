@@ -2,6 +2,14 @@
 
 Notable changes to this project will be documented in this file.
 
+## 1.2.11
+
+Add hover inspect on variables of
+
+- src/test/environment/global.json
+- src/test/environment/seed-e2e.json
+- src/test/environment/{env}.json
+
 ## 1.2.10
 
 Improve Improvement in Karate Viewer for captured responses
