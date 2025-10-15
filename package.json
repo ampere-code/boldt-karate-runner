@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/ampere-code/boldt-karate-runner"
   },
-  "version": "1.2.11",
+  "version": "1.2.12",
   "appInsightsId": "a285938d-a115-44ea-be2a-588a243d5f2c",
   "license": "MIT",
   "author": {
@@ -622,6 +622,16 @@
           "default": "docker compose run --rm karate mvn clean test",
           "description": "Karate docker compose command line. Boldt Karate Runner will inject the karate.options with the feature file being tested and suffixing the feature file with a ':number' when running individual Scenarios. Also will inject the karate.env if available.",
           "scope": "resource"
+        },
+        "karateRunner.core.environmentsPath": {
+          "type": "string",
+          "default": "src/test/resources/environments",
+          "description": "Specifies the relative path to the environments directory where Karate environment JSON files are located (e.g., global.json, e2e-seed.json, local.json, local-docker.json)."
+        },
+        "karateRunner.core.captureCommand": {
+          "type": "string",
+          "default": "CAPTURE-ON",
+          "description": "Defines the command prefix used in test logs to start a capture block (e.g., 'CAPTURE-ON RESPONSE' / 'CAPTURE-OFF'). Changing this allows flexibility (e.g., use 'RESPONSE-ON' / 'RESPONSE-OFF')."
         }
       }
     },

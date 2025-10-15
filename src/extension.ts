@@ -398,18 +398,16 @@ function registerHoverEnvProvider(context: vscode.ExtensionContext) {
         const config = vscode.workspace.getConfiguration("karateRunner.core");
         const envName = config.get("environment") || "dev-er";
 
-        const basePath = path.join(
-          workspaceRoot,
-          "src",
-          "test",
-          "resources",
-          "environments"
-        );
+        const basePath = vscode.workspace
+          .getConfiguration("karateRunner.core")
+          .get("environmentsPath", "src/test/resources/environments");
+
+        const fullBasePath = path.join(workspaceRoot, basePath);
 
         const candidates = [
-          path.join(basePath, `${envName}.json`),
-          path.join(basePath, "global.json"),
-          path.join(basePath, "e2e-seed.json"),
+          path.join(fullBasePath, "global.json"),
+          path.join(fullBasePath, "e2e-seed.json"),
+          path.join(fullBasePath, `${envName}.json`),
         ];
 
         for (const filePath of candidates) {
@@ -431,8 +429,13 @@ function registerHoverEnvProvider(context: vscode.ExtensionContext) {
 
             const value = findDeep(json);
             if (value !== undefined) {
+              const formattedValue =
+                typeof value === "string" && value.startsWith("http")
+                  ? `[${value}](${value})`
+                  : `\`${value}\``;
+
               const md = new vscode.MarkdownString(
-                `**${variable}**\n\n\`${value}\`\n\n🌎 Environment: **${envName}**\n📁 _${path.relative(
+                `**${variable}**\n\n${formattedValue}\n\n🌎 Environment: **${envName}**\n📁 _${path.relative(
                   workspaceRoot,
                   filePath
                 )}_`
@@ -453,7 +456,7 @@ function registerHoverEnvProvider(context: vscode.ExtensionContext) {
         }
 
         const notFound = new vscode.MarkdownString(
-          `⚠️ Variable **${variable}** not found in:\n- ${envName}.json\n- global.json\n- e2e-seed.json`
+          `⚠️ Variable **${variable}** not found in:\n- ${envName}.json\n- global.json\n- e2e-seed.json\n\n 📁 on path \`${basePath}\``
         );
         return new vscode.Hover(notFound);
       },

@@ -150,6 +150,30 @@
       .key {
         color: #60a5fa;
       } /* azul */
+
+      #capture {
+        margin-top: 8px;
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 8px;
+        font-family: monospace;
+        font-size: 12px;
+        height: 220px;
+        overflow-y: auto;
+        color: #e5e7eb;
+      }
+      .capture-block {
+        border: 1px solid #1e293b;
+        border-radius: 4px;
+        background: #1e293b;
+        margin-bottom: 10px;
+      }
+      .capture-body {
+        color: #e5e7eb;
+        padding: 6px;
+        white-space: pre-wrap;
+      }
     </style>
   </head>
   <body>
@@ -281,7 +305,7 @@
       <h3></h3>
       <div id="responses"></div>
     </section> -->
-    <section
+    <!-- <section
       id="responses"
 	    margin-top: 16px;
         background: #0f172a;
@@ -296,6 +320,11 @@
         color: #e5e7eb;
         transition: none !important; /* 👈 evita animación del resize */
     >
+    </section> -->
+
+    <section>
+      <h3>Captures</h3>
+      <div id="capture"></div>
     </section>
 
     <section>
@@ -365,24 +394,33 @@
           case "result-data":
             fillResult(msg.data);
             break;
-
-          // 🧩 RESPONSE CAPTURE
-          // case "response":
-          //   const r = document.getElementById("responses");
-          //   r.innerHTML += `<pre>${msg.text}</pre>`;
-          //   break;
-          case "response":
-            const r = document.getElementById("responses");
-            const pretty = syntaxHighlight(msg.text);
-            r.innerHTML += `
-                  <details open>
-                    <summary style="cursor:pointer;color:#60a5fa;margin-top:8px;">
-                    📡 Captured Response
-                    </summary>
-                    <pre class="response-block">${pretty}</pre>
-                  </details>
-                  `;
-            r.scrollTop = r.scrollHeight;
+          case "capture":
+            const container = document.getElementById("capture");
+            const text = msg.text.trim();
+            const tag = msg.tag || "Untitled";
+            let formatted = text;
+            try {
+              // Detect if it's JSON
+              if (text.startsWith("{") || text.startsWith("[")) {
+                const parsed = JSON.parse(text);
+                formatted = syntaxHighlight(JSON.stringify(parsed, null, 2));
+              } else {
+                formatted = syntaxHighlight(text);
+              }
+            } catch {
+              formatted = syntaxHighlight(text);
+            }
+            const block = document.createElement("div");
+            block.innerHTML = `
+                <details open class="capture-block">
+                  <summary style="cursor:pointer;color:#60a5fa;margin-top:8px;">
+                    📦 ${tag}
+                  </summary>
+                  <pre class="capture-body">${formatted}</pre>
+                </details>
+              `;
+            container.appendChild(block);
+            container.scrollTop = container.scrollHeight;
             break;
         }
       });
@@ -466,19 +504,23 @@
 
       // 🧹 Función de reset general
       function resetViewer() {
-        // Reset status
+        // 🟢 Reset status
         const status = document.getElementById("status");
         status.textContent = "Executing tests...";
 
-        // Limpia consola
+        // 🧹 Limpia consola
         const c = document.getElementById("console");
         c.textContent = "";
 
-        // Limpia responses
+        // 🧹 Limpia responses
         const r = document.getElementById("responses");
-        r.innerHTML = "";
+        if (r) r.innerHTML = "";
 
-        // Resetea campos del summary y results
+        // 🧹 Limpia captures
+        const cap = document.getElementById("capture");
+        if (cap) cap.innerHTML = "";
+
+        // 🔁 Resetea campos del summary y resultados
         const ids = [
           "env",
           "version",
@@ -494,6 +536,7 @@
           "scenariosFailed",
           "scenariosSkipped",
         ];
+
         ids.forEach((id) => {
           const el = document.getElementById(id);
           if (!el) return;
@@ -502,6 +545,7 @@
           else el.textContent = "0";
         });
       }
+
       function syntaxHighlight(jsonText) {
         if (!jsonText) return "";
         return jsonText

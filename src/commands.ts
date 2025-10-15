@@ -829,97 +829,182 @@ async function runKarateTest(args = null) {
     env: process.env,
   });
 
-  // Captura stdout
-
-  let capturingResponse = false;
-  let buffer = "";
+  // 🔹 Capture block logic with auto-derived OFF command
+  let capturingBlock = false;
+  let captureTag = "Untitled";
+  let captureBuffer = "";
 
   const rl = readline.createInterface({ input: child.stdout });
 
+  // 🧩 Configurable commands
+  const config = vscode.workspace.getConfiguration("karateRunner.core");
+  const captureOnCmd = config.get("captureCommand", "CAPTURE-ON");
+  let captureOffCmd = config.get("captureOffCommand", "");
+
+  // 🔹 Auto-generate the OFF command if not explicitly provided
+  if (!captureOffCmd) {
+    if (captureOnCmd.toUpperCase().includes("ON")) {
+      captureOffCmd = captureOnCmd.toUpperCase().replace("ON", "OFF");
+    } else {
+      captureOffCmd = "CAPTURE-OFF";
+    }
+  }
+
+  const captureOnRegex = new RegExp(
+    `\\b${captureOnCmd}(?:\\s+([A-Z0-9_-]+))?`,
+    "i"
+  );
+  const captureOffRegex = new RegExp(`\\b${captureOffCmd}\\b`, "i");
+
   rl.on("line", (line) => {
-    // 🔹 Limpia colores ANSI y espacios
     // eslint-disable-next-line no-control-regex
     const clean = line.replace(/\u001b\[[0-9;]*m/g, "").trim();
 
-    // 🔹 Siempre mostrar en consola
     panel.webview.postMessage({ command: "console", text: line + "\n" });
 
-    // 🔹 Detectar inicio
-    if (clean.includes("--- begin response ---")) {
-      capturingResponse = true;
-      buffer = "";
+    // 🟢 Begin capture
+    if (captureOnRegex.test(clean)) {
+      const match = clean.match(captureOnRegex);
+      captureTag = match?.[1] || "Untitled";
+      capturingBlock = true;
+      captureBuffer = "";
+
+      panel.webview.postMessage({
+        command: "console",
+        text: `<span style="color:#60a5fa;">🟢 Capture started (${captureTag}) — waiting for ${captureOffCmd}</span>\n`,
+      });
       return;
     }
 
-    // 🔹 Detectar fin
-    if (clean.includes("--- end response ---")) {
-      capturingResponse = false;
-
-      try {
-        // Limpieza avanzada: quita timestamps y [INFO] [print]
-        const cleaned = buffer
-          .split("\n")
-          .map((l) =>
-            l
-              .replace(
-                /^(\d{2}:\d{2}:\d{2}\.\d+)?\s*\[INFO\]\s*\[print\]\s*/,
-                ""
-              )
-              .trim()
-          )
-          .filter((l) => l.length > 0)
-          .join("\n")
-          .trim();
-
-        // Mostrar bloque crudo
+    // 🔴 End capture
+    if (captureOffRegex.test(clean)) {
+      if (capturingBlock && captureBuffer.trim()) {
         panel.webview.postMessage({
-          command: "console",
-          text: `<span style="color:#9ca3af;">🧾 Raw captured block:\n${cleaned}</span>\n`,
+          command: "capture",
+          tag: captureTag,
+          text: captureBuffer.trim(),
         });
 
-        // Detectar el inicio real del JSON
-        const startIdx = cleaned.search(/[{\[]/);
-        if (startIdx === -1) throw new Error("Not a valid JSON block");
-        const jsonText = cleaned.substring(startIdx);
-
-        const json = JSON.parse(jsonText);
-
-        // ✅ Mostrar en panel
-        panel.webview.postMessage({
-          command: "response",
-          text: JSON.stringify(json, null, 2),
-        });
-
-        // ✅ Mostrar en consola (verde)
         panel.webview.postMessage({
           command: "console",
-          text: `<span style="color:#16a34a;">📦 Captured Response:\n${JSON.stringify(
-            json,
-            null,
-            2
-          )}</span>\n\n`,
-        });
-      } catch (err) {
-        // ❌ Error + bloque fallido
-        panel.webview.postMessage({
-          command: "console",
-          text:
-            `<span style="color:#f87171;">⚠️ Error parsing response: ${err.message}</span>\n` +
-            `<span style="color:#fbbf24;">🪵 Raw block (unformatted):</span>\n${buffer}\n\n`,
+          text: `<span style="color:#22c55e;">✅ Capture finished (${captureTag})</span>\n`,
         });
       }
 
-      buffer = "";
+      capturingBlock = false;
+      captureTag = "Untitled";
+      captureBuffer = "";
       return;
     }
 
-    // 🔹 Acumular solo mientras estamos dentro del bloque
-    if (capturingResponse) {
-      // ignorar líneas vacías
-      if (!clean) return;
-      buffer += clean + "\n";
+    const sanitized = clean
+      // quita timestamps + [INFO] [print]
+      .replace(/^(\d{2}:\d{2}:\d{2}\.\d+)?\s*\[INFO\]\s*\[print\]\s*/g, "")
+      // quita otros logs tipo [DEBUG], [WARN], etc.
+      .replace(/^\[([A-Z]+)\]\s*/g, "")
+      .trim();
+
+    // Acumula solo si queda contenido útil
+    if (capturingBlock && sanitized.length > 0) {
+      captureBuffer += sanitized + "\n";
     }
+    // // ✏️ While capturing, accumulate lines
+    // if (capturingBlock) {
+    //   captureBuffer += clean + "\n";
+    // }
   });
+
+  // // Captura stdout
+
+  // let capturingResponse = false;
+  // let buffer = "";
+
+  // const rl = readline.createInterface({ input: child.stdout });
+
+  // rl.on("line", (line) => {
+  //   // 🔹 Limpia colores ANSI y espacios
+  //   // eslint-disable-next-line no-control-regex
+  //   const clean = line.replace(/\u001b\[[0-9;]*m/g, "").trim();
+
+  //   // 🔹 Siempre mostrar en consola
+  //   panel.webview.postMessage({ command: "console", text: line + "\n" });
+
+  //   // 🔹 Detectar inicio
+  //   if (clean.includes("--- begin response ---")) {
+  //     capturingResponse = true;
+  //     buffer = "";
+  //     return;
+  //   }
+
+  //   // 🔹 Detectar fin
+  //   if (clean.includes("--- end response ---")) {
+  //     capturingResponse = false;
+
+  //     try {
+  //       // Limpieza avanzada: quita timestamps y [INFO] [print]
+  //       const cleaned = buffer
+  //         .split("\n")
+  //         .map((l) =>
+  //           l
+  //             .replace(
+  //               /^(\d{2}:\d{2}:\d{2}\.\d+)?\s*\[INFO\]\s*\[print\]\s*/,
+  //               ""
+  //             )
+  //             .trim()
+  //         )
+  //         .filter((l) => l.length > 0)
+  //         .join("\n")
+  //         .trim();
+
+  //       // Mostrar bloque crudo
+  //       panel.webview.postMessage({
+  //         command: "console",
+  //         text: `<span style="color:#9ca3af;">🧾 Raw captured block:\n${cleaned}</span>\n`,
+  //       });
+
+  //       // Detectar el inicio real del JSON
+  //       const startIdx = cleaned.search(/[{\[]/);
+  //       if (startIdx === -1) throw new Error("Not a valid JSON block");
+  //       const jsonText = cleaned.substring(startIdx);
+
+  //       const json = JSON.parse(jsonText);
+
+  //       // ✅ Mostrar en panel
+  //       panel.webview.postMessage({
+  //         command: "response",
+  //         text: JSON.stringify(json, null, 2),
+  //       });
+
+  //       // ✅ Mostrar en consola (verde)
+  //       panel.webview.postMessage({
+  //         command: "console",
+  //         text: `<span style="color:#16a34a;">📦 Captured Response:\n${JSON.stringify(
+  //           json,
+  //           null,
+  //           2
+  //         )}</span>\n\n`,
+  //       });
+  //     } catch (err) {
+  //       // ❌ Error + bloque fallido
+  //       panel.webview.postMessage({
+  //         command: "console",
+  //         text:
+  //           `<span style="color:#f87171;">⚠️ Error parsing response: ${err.message}</span>\n` +
+  //           `<span style="color:#fbbf24;">🪵 Raw block (unformatted):</span>\n${buffer}\n\n`,
+  //       });
+  //     }
+
+  //     buffer = "";
+  //     return;
+  //   }
+
+  //   // 🔹 Acumular solo mientras estamos dentro del bloque
+  //   if (capturingResponse) {
+  //     // ignorar líneas vacías
+  //     if (!clean) return;
+  //     buffer += clean + "\n";
+  //   }
+  // });
 
   // Captura stderr
   child.stderr.on("data", (data) => {

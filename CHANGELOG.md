@@ -2,6 +2,13 @@
 
 Notable changes to this project will be documented in this file.
 
+## 1.2.12
+
+    - Improved capture system — now supports generic log blocks, not only responses.
+    - Added configurable capture command (CAPTURE-ON [TAG] / CAPTURE-OFF).
+    - Parameterized environment files path (default: src/test/resources/environments).
+    - Enhanced environment variable hover lookup (env, global, e2e-seed).
+
 ## 1.2.11
 
 Add hover inspect on variables of
