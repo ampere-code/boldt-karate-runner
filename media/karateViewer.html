@@ -410,17 +410,48 @@
             } catch {
               formatted = syntaxHighlight(text);
             }
+            const captureId =
+              "cap_" + Math.random().toString(36).substring(2, 9);
             const block = document.createElement("div");
+            // <summary style="cursor:pointer;color:#60a5fa;margin-top:8px;">
             block.innerHTML = `
-                <details open class="capture-block">
-                  <summary style="cursor:pointer;color:#60a5fa;margin-top:8px;">
-                    📦 ${tag}
+                <details open class="capture-block" id="${captureId}">
+                  <summary style="cursor:pointer;color:#60a5fa;margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
+                    <span class="summary-left" style="display:flex;align-items:center;gap:6px;">
+                          <span class="collapse-icon">⯆</span>
+                          <span>${tag}</span>
+                    </span>
+                    <button class="copy-btn" data-target="${captureId}" title="Copy to clipboard"
+                            style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;">📋 Copy</button>                    
                   </summary>
                   <pre class="capture-body">${formatted}</pre>
                 </details>
               `;
             container.appendChild(block);
             container.scrollTop = container.scrollHeight;
+            // 🔹 Add clipboard listeners
+            const btn = block.querySelector(".copy-btn");
+            if (btn) {
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                const target = e.currentTarget.getAttribute("data-target");
+                const pre = document.querySelector(`#${target} pre`);
+                if (pre) {
+                  navigator.clipboard.writeText(pre.innerText).then(() => {
+                    btn.textContent = "✅ Copied!";
+                    setTimeout(() => (btn.textContent = "📋 Copy"), 1500);
+                  });
+                }
+              };
+            }
+            // 🔹 Listener para alternar icono ⯈ / ⯆
+            const details = block.querySelector("details");
+            const icon = block.querySelector(".collapse-icon");
+            if (details && icon) {
+              details.addEventListener("toggle", () => {
+                icon.textContent = details.open ? "⯆" : "⯈";
+              });
+            }
             break;
         }
       });

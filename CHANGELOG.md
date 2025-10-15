@@ -2,6 +2,11 @@
 
 Notable changes to this project will be documented in this file.
 
+## 1.2.13
+
+    - Copy to clipboard of captured from logs
+    - Add intellisense to variables
+
 ## 1.2.12
 
     - Improved capture system — now supports generic log blocks, not only responses.

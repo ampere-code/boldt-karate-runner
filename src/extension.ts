@@ -370,6 +370,8 @@ export function activate(context: vscode.ExtensionContext) {
       );
     }
   });
+
+  registerEnvCompletionProvider(context);
 }
 
 export function deactivate() {
@@ -461,6 +463,68 @@ function registerHoverEnvProvider(context: vscode.ExtensionContext) {
         return new vscode.Hover(notFound);
       },
     }
+  );
+
+  context.subscriptions.push(provider);
+}
+
+export function registerEnvCompletionProvider(
+  context: vscode.ExtensionContext
+) {
+  const provider = vscode.languages.registerCompletionItemProvider(
+    { language: "karate", scheme: "file" },
+    {
+      provideCompletionItems(document, position) {
+        const config = vscode.workspace.getConfiguration("karateRunner.core");
+        const envName = config.get("environment") || "dev-er";
+        const basePath = config.get(
+          "environmentsPath",
+          "src/test/resources/environments"
+        );
+
+        const files = [
+          path.join(basePath, "global.json"),
+          path.join(basePath, "e2e-seed.json"),
+          path.join(basePath, `${envName}.json`),
+        ];
+
+        const allKeys = new Set<string>();
+
+        for (const filePath of files) {
+          if (!fs.existsSync(filePath)) continue;
+          try {
+            const json = JSON.parse(fs.readFileSync(filePath, "utf8"));
+            const collect = (obj: any, prefix = "") => {
+              for (const key of Object.keys(obj)) {
+                const full = prefix ? `${prefix}.${key}` : key;
+                allKeys.add(full);
+                if (typeof obj[key] === "object" && obj[key] !== null)
+                  collect(obj[key], full);
+              }
+            };
+            collect(json);
+          } catch (err) {
+            console.warn(`Error reading ${filePath}: ${err.message}`);
+          }
+        }
+
+        return Array.from(allKeys).map((key) => {
+          const item = new vscode.CompletionItem(
+            key,
+            vscode.CompletionItemKind.Variable
+          );
+          item.insertText = key;
+          item.detail = `Environment variable (${envName})`;
+          item.documentation = new vscode.MarkdownString(
+            `💡 Suggestion from **${envName}** environment`
+          );
+          return item;
+        });
+      },
+    },
+    "#",
+    "(",
+    "_" // 🔹 triggers comunes en Karate
   );
 
   context.subscriptions.push(provider);
